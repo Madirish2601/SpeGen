@@ -22,6 +22,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -30,15 +31,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SimpleInputTextBox()
-            TextToSpeechScreen()
+            Screen()
         }
     }
+}
+
+object input {
+    var newText = ""
 }
 
 fun InvokeAPI(symbol: String) {
@@ -57,23 +60,37 @@ fun InvokeAPI(symbol: String) {
 }
 
 @Composable
-fun SimpleInputTextBox() {
-    // State to hold the current value of the text field
+fun InputBox() {
     var text by remember { mutableStateOf("") }
-
-    Column() {
-        TextField(
-            value = text, // The current text displayed in the input box
-            onValueChange = {
+    TextField(
+        value = text, // The current text displayed in the input box
+        onValueChange = {
                 newText -> text = newText
-                InvokeAPI(newText)
-            }, // Callback when text changes
-            label = { Text("Image Search") }, // Optional label for the input box
-            modifier = Modifier
-                .fillMaxWidth() // Make the TextField fill the width
-                .padding(50.dp)
-        )
+            InvokeAPI(newText)
+        }, // Callback when text changes
+        label = { Text("Image Search") }, // Optional label for the input box
+        modifier = Modifier
+            .fillMaxWidth() // Make the TextField fill the width
+            .padding(50.dp)
+    )
+}
+
+@Composable
+fun TextSubmitButton() {
+    Column() {
+        Button(
+            onClick = { },
+            modifier = Modifier.offset(80.dp, 80.dp)
+        ) {
+            Text(text = "Submit")
+        }
     }
+}
+
+@Composable
+fun Screen() {
+    TextSubmitButton()
+    InputBox()
 }
 
 val sentences = listOf(
@@ -87,26 +104,15 @@ val sentences = listOf(
 fun TextToSpeechScreen() {
     var isSpeaking by remember { mutableStateOf(false) }
     val tts = rememberTextToSpeech()
-
-    Column(modifier = Modifier.padding(24.dp)) {
+    if (tts.value?.isSpeaking == true) {
+        tts.value?.stop()
         isSpeaking = false
-        for (sentence in sentences) {
-            Button(onClick = {
-                if (tts.value?.isSpeaking == true) {
-                    tts.value?.stop()
-                    isSpeaking = false
-                } else {
-                    tts.value?.speak(
-                        sentence, TextToSpeech.QUEUE_FLUSH, null, ""
+    } else {
+        tts.value?.speak(
+            input.newText, TextToSpeech.QUEUE_FLUSH, null, ""
                     )
-                    isSpeaking = true
+        isSpeaking = true
                 }
-            }) {
-                Text(sentence)
-            } // End Button
-        } // End for
-
-    }
 }
 
 @Composable
