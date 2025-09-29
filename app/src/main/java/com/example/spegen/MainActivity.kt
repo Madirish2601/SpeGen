@@ -1,5 +1,6 @@
 package com.example.spegen
 
+import android.R.id.input
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
@@ -30,6 +31,10 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.util.Locale
+import android.R.string
+
+var text: String = "Hello from global"
+private var param: String = ""
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,11 +44,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-object input {
-    var newText = ""
-}
-
 fun InvokeAPI(symbol: String) {
     val url = "https://www.opensymbols.org/search?q=" + symbol
 
@@ -66,7 +66,7 @@ fun InputBox() {
         value = text, // The current text displayed in the input box
         onValueChange = {
                 newText -> text = newText
-            InvokeAPI(newText)
+            InvokeAPI(text)
         }, // Callback when text changes
         label = { Text("Image Search") }, // Optional label for the input box
         modifier = Modifier
@@ -77,9 +77,13 @@ fun InputBox() {
 
 @Composable
 fun TextSubmitButton() {
+    var showTTS by remember { mutableStateOf(false) }
     Column() {
+        if (showTTS) {
+        }
         Button(
-            onClick = { },
+            onClick = {
+            },
             modifier = Modifier.offset(80.dp, 80.dp)
         ) {
             Text(text = "Submit")
@@ -87,32 +91,36 @@ fun TextSubmitButton() {
     }
 }
 
-@Composable
-fun Screen() {
-    TextSubmitButton()
-    InputBox()
-}
-
 val sentences = listOf(
-    "This works",
-    "Test 1 2 3",
-    "I am a text to speech engine!",
+    "Hello World!",
+    "This TTS Engine Works",
+    "It doesn't work.",
 )
-
 
 @Composable
 fun TextToSpeechScreen() {
     var isSpeaking by remember { mutableStateOf(false) }
     val tts = rememberTextToSpeech()
-    if (tts.value?.isSpeaking == true) {
-        tts.value?.stop()
+
+    Column(modifier = Modifier.padding(24.dp)) {
         isSpeaking = false
-    } else {
-        tts.value?.speak(
-            input.newText, TextToSpeech.QUEUE_FLUSH, null, ""
+        for (sentence in sentences) {
+            Button(onClick = {
+                if (tts.value?.isSpeaking == true) {
+                    tts.value?.stop()
+                    isSpeaking = false
+                } else {
+                    tts.value?.speak(
+                        sentence, TextToSpeech.QUEUE_FLUSH, null, ""
                     )
-        isSpeaking = true
+                    isSpeaking = true
                 }
+            }) {
+                Text(sentence)
+            } // End Button
+        } // End for
+
+    }
 }
 
 @Composable
@@ -133,4 +141,13 @@ fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
         }
     }
     return tts
+}
+
+
+
+@Composable
+fun Screen() {
+    TextSubmitButton()
+    InputBox()
+    TextToSpeechScreen()
 }
