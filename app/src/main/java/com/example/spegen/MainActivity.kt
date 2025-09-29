@@ -66,6 +66,7 @@ fun InputBox() {
         value = text, // The current text displayed in the input box
         onValueChange = {
                 newText -> text = newText
+                com.example.spegen.text = text
             InvokeAPI(text)
         }, // Callback when text changes
         label = { Text("Image Search") }, // Optional label for the input box
@@ -77,18 +78,26 @@ fun InputBox() {
 
 @Composable
 fun TextSubmitButton() {
+    var isSpeaking by remember { mutableStateOf(false) }
     var showTTS by remember { mutableStateOf(false) }
-    Column() {
-        if (showTTS) {
-        }
-        Button(
-            onClick = {
-            },
-            modifier = Modifier.offset(80.dp, 80.dp)
-        ) {
-            Text(text = "Submit")
-        }
-    }
+    val tts = rememberTextToSpeech()
+
+    Column(modifier = Modifier.padding(24.dp)) {
+        isSpeaking = false
+            Button(onClick = {
+                if (tts.value?.isSpeaking == true) {
+                    tts.value?.stop()
+                    isSpeaking = false
+                } else {
+                    tts.value?.speak(
+                        text, TextToSpeech.QUEUE_FLUSH, null, ""
+                    )
+                    isSpeaking = true
+                }
+            }) {
+                Text("Submit")
+            } // End Button
+        } // End for
 }
 
 val sentences = listOf(
@@ -96,32 +105,6 @@ val sentences = listOf(
     "This TTS Engine Works",
     "It doesn't work.",
 )
-
-@Composable
-fun TextToSpeechScreen() {
-    var isSpeaking by remember { mutableStateOf(false) }
-    val tts = rememberTextToSpeech()
-
-    Column(modifier = Modifier.padding(24.dp)) {
-        isSpeaking = false
-        for (sentence in sentences) {
-            Button(onClick = {
-                if (tts.value?.isSpeaking == true) {
-                    tts.value?.stop()
-                    isSpeaking = false
-                } else {
-                    tts.value?.speak(
-                        sentence, TextToSpeech.QUEUE_FLUSH, null, ""
-                    )
-                    isSpeaking = true
-                }
-            }) {
-                Text(sentence)
-            } // End Button
-        } // End for
-
-    }
-}
 
 @Composable
 fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
@@ -149,5 +132,4 @@ fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
 fun Screen() {
     TextSubmitButton()
     InputBox()
-    TextToSpeechScreen()
 }
