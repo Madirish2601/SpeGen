@@ -1,9 +1,7 @@
 package com.example.spegen
 
-import android.R.id.input
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import android.speech.tts.TextToSpeech.OnInitListener
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -18,23 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import java.util.Locale
-import android.R.string
 
-var text: String = "Hello from global"
-private var param: String = ""
+var text: String = ""
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,20 +30,6 @@ class MainActivity : ComponentActivity() {
             Screen()
         }
     }
-}
-fun InvokeAPI(symbol: String) {
-    val url = "https://www.opensymbols.org/search?q=" + symbol
-
-    val stringRequest = StringRequest(
-        Request.Method.GET, url,
-        Response.Listener { response ->
-            // Handle the response data
-            println("Works")
-        },
-        Response.ErrorListener { error ->
-            // Handle errors
-            println("Doesn't Work")
-        })
 }
 
 @Composable
@@ -67,44 +40,31 @@ fun InputBox() {
         onValueChange = {
                 newText -> text = newText
                 com.example.spegen.text = text
-            InvokeAPI(text)
         }, // Callback when text changes
         label = { Text("Image Search") }, // Optional label for the input box
         modifier = Modifier
-            .fillMaxWidth() // Make the TextField fill the width
-            .padding(50.dp)
+            .padding(vertical = 150.dp)
+            .fillMaxWidth()
     )
 }
 
 @Composable
 fun TextSubmitButton() {
-    var isSpeaking by remember { mutableStateOf(false) }
-    var showTTS by remember { mutableStateOf(false) }
     val tts = rememberTextToSpeech()
 
     Column(modifier = Modifier.padding(24.dp)) {
-        isSpeaking = false
             Button(onClick = {
                 if (tts.value?.isSpeaking == true) {
                     tts.value?.stop()
-                    isSpeaking = false
-                } else {
-                    tts.value?.speak(
-                        text, TextToSpeech.QUEUE_FLUSH, null, ""
-                    )
-                    isSpeaking = true
-                }
-            }) {
+                } else tts.value?.speak(
+                    text, TextToSpeech.QUEUE_FLUSH, null, ""
+                )
+            }
+            ) {
                 Text("Submit")
             } // End Button
         } // End for
 }
-
-val sentences = listOf(
-    "Hello World!",
-    "This TTS Engine Works",
-    "It doesn't work.",
-)
 
 @Composable
 fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
