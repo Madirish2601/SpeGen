@@ -1,5 +1,6 @@
 package com.example.spegen
 
+import android.os.AsyncTask
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
@@ -7,19 +8,23 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.*
-import androidx.compose.material3.Button
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.github.kittinunf.fuel.Fuel
+import com.github.kittinunf.fuel.core.extensions.jsonBody
 import java.util.Locale
+
 
 var text: String = ""
 
@@ -28,6 +33,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Screen()
+            main()
         }
     }
 }
@@ -86,7 +92,35 @@ fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
     return tts
 }
 
+data class AccessTokenResponse(
+    val access_token: String,
+    val expires_in: Long
+    // Add other fields if needed
+)
 
+fun main() {
+    val url = "https://opensymbols.org/api/v2/token/"
+    val jsonPayload = "d65234627cc790cba662f6b3"
+
+    Fuel.post(url)
+        .jsonBody(jsonPayload)
+        .response { request, response, result ->
+            when (result) {
+                is com.github.kittinunf.result.Result.Success -> {
+                    val data = String(response.data)
+                    println("Request: $request")
+                    println("Response: $response")
+                    println("Success: $data")
+                }
+                is com.github.kittinunf.result.Result.Failure -> {
+                    val ex = result.getException()
+                    println("Request: $request")
+                    println("Response: $response")
+                    println("Error: ${ex.message}")
+                }
+            }
+        }
+}
 
 @Composable
 fun Screen() {

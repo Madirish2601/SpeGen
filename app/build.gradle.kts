@@ -40,9 +40,12 @@ android {
 }
 
 dependencies {
-    implementation("com.android.volley:volley:1.2.1")
-    implementation("com.google.android.gms:play-services-cronet:18.0.1")
-    implementation(platform("androidx.compose:compose-bom:2024.04.00"))
+    implementation("com.github.kittinunf.fuel:fuel-gson:2.3.1")
+    implementation("com.github.kittinunf.fuel:fuel-coroutines:2.3.1")
+    implementation("com.github.kittinunf.fuel:fuel:2.3.1")
+    implementation("com.github.kittinunf.fuel:fuel-android:2.3.1")
+    implementation("com.google.android.gms:play-services-cronet:18.1.0")
+    implementation(platform("androidx.compose:compose-bom:2025.09.01"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
