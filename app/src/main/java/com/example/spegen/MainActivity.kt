@@ -1,6 +1,7 @@
 package com.example.spegen
 
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,11 +40,12 @@ var text: String = ""
 
 const val CLIENT_SECRET = "d65234627cc790cba662f6b3"
 
+var accesstoken = ""
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        main()
         setContent {
             Screen()
         }
@@ -69,7 +71,6 @@ fun InputBox() {
 @Composable
 fun TextSubmitButton() {
     val tts = rememberTextToSpeech()
-
     Column(modifier = Modifier.padding(24.dp)) {
         Button(onClick = {
             if (tts.value?.isSpeaking == true) {
@@ -80,6 +81,22 @@ fun TextSubmitButton() {
         }
         ) {
             Text("Submit")
+        }
+    }
+}
+
+@Composable
+fun OpenSymbolsButton() {
+    val token = 
+    Column(modifier = Modifier.padding(30.dp)) {
+        Button(onClick = {
+            runBlocking {
+                getAccessToken()
+                useApiWithToken(accesstoken, text)
+            }
+        }
+        ) {
+            Text("Search")
         }
     }
 }
@@ -126,6 +143,7 @@ suspend fun getAccessToken(): AccessTokenResponse? {
             is com.github.kittinunf.result.Result.Success -> {
                 val tokenResponse = result.get()
                 println("Successfully retrieved access token: ${tokenResponse}")
+                accesstoken = tokenResponse.access_token
                 tokenResponse
             }
         }
@@ -157,16 +175,10 @@ suspend fun useApiWithToken(token: String, search: String) {
 }
 
 
-fun main() {
-    runBlocking {
-        getAccessToken()
-        }
-}
-
-
 
     @Composable
 fun Screen() {
     TextSubmitButton()
     InputBox()
+    OpenSymbolsButton()
 }
