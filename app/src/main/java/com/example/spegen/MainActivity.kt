@@ -1,5 +1,7 @@
 package com.example.spegen
 
+import android.R
+import android.R.attr.enabled
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.speech.tts.TextToSpeech
@@ -22,18 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.Request
-import com.github.kittinunf.fuel.core.extensions.jsonBody
 import java.util.Locale
-import com.github.kittinunf.fuel.httpPost
-import java.net.URI
-import kotlin.jvm.java
-import com.github.kittinunf.fuel.core.Headers
 import com.github.kittinunf.fuel.gson.responseObject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.util.Objects.toString
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 
 
 var text: String = ""
@@ -126,6 +124,12 @@ data class AccessTokenResponse(
     val expires_in: Long
 )
 
+@Serializable
+data class ApiSymbolResponse(
+    val id: String = ""
+)
+
+
 suspend fun getAccessToken(): AccessTokenResponse? {
     return withContext(Dispatchers.IO) {
         val params = listOf(
@@ -156,7 +160,8 @@ suspend fun useApiWithToken(token: String, search: String) {
         val params = listOf(
             "q" to search,
             "locale" to "en",
-            "safe" to "1"
+            "safe" to "0",
+            "access_token" to token
         )
 
         val (_, _, result) = Fuel.get("https://www.opensymbols.org/api/v2/symbols", params)
@@ -168,15 +173,14 @@ suspend fun useApiWithToken(token: String, search: String) {
                 println("API call failed: ${ex.message}")
             }
             is com.github.kittinunf.result.Result.Success -> {
-                println("API call successful! Response: ${result.get()}")
+                val symbol = result.get()
+                println("API call successful! Response: ${symbol}")
             }
         }
     }
 }
 
-
-
-    @Composable
+@Composable
 fun Screen() {
     TextSubmitButton()
     InputBox()
