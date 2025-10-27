@@ -1,9 +1,6 @@
 package com.example.spegen
 
-import android.R
-import android.R.attr.enabled
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,12 +23,13 @@ import androidx.compose.ui.unit.dp
 import com.github.kittinunf.fuel.Fuel
 import java.util.Locale
 import com.github.kittinunf.fuel.gson.responseObject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import com.github.kittinunf.result.Result
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
 
 var text: String = ""
@@ -39,6 +37,7 @@ var text: String = ""
 const val CLIENT_SECRET = "d65234627cc790cba662f6b3"
 
 var accesstoken = ""
+var expires_in = 0
 
 
 class MainActivity : ComponentActivity() {
@@ -85,12 +84,11 @@ fun TextSubmitButton() {
 
 @Composable
 fun OpenSymbolsButton() {
-    val token = 
+    val token =
     Column(modifier = Modifier.padding(30.dp)) {
         Button(onClick = {
             runBlocking {
-                getAccessToken()
-                useApiWithToken(accesstoken, text)
+                useApiWithToken(getAccessToken(), text)
             }
         }
         ) {
@@ -125,8 +123,26 @@ data class AccessTokenResponse(
 )
 
 @Serializable
+@JsonIgnoreUnknownKeys
 data class ApiSymbolResponse(
-    val id: String = ""
+    public val id: Int,
+    public val symbol_key: String,
+    public val name: String,
+    public val locale: String,
+    public val license: String,
+    public val license_url: String,
+    public val author: String,
+    public val author_url: String,
+    public val source_url: String? = null,
+    public val skins: Boolean? = false,
+    public val repo_key: String,
+    public val hc: Boolean? = false,
+    public val extension: String,
+    public val image_url: String,
+    public val search_string: String,
+    public val unsafe_result: Boolean,
+    public val _href: String,
+    public val details_url: String
 )
 
 
@@ -139,14 +155,14 @@ suspend fun getAccessToken(): AccessTokenResponse? {
             .responseObject<AccessTokenResponse>()
 
         when (result) {
-            is com.github.kittinunf.result.Result.Failure -> {
+            is Result.Failure -> {
                 val ex = result.getException()
                 println("Failed to get access token: ${ex.message}")
                 null
             }
-            is com.github.kittinunf.result.Result.Success -> {
+
+            is Result.Success -> {
                 val tokenResponse = result.get()
-                println("Successfully retrieved access token: ${tokenResponse}")
                 accesstoken = tokenResponse.access_token
                 tokenResponse
             }
@@ -155,7 +171,7 @@ suspend fun getAccessToken(): AccessTokenResponse? {
 }
 
 
-suspend fun useApiWithToken(token: String, search: String) {
+suspend fun useApiWithToken(token: AccessTokenResponse?, search: String) {
     withContext(Dispatchers.IO) {
         val params = listOf(
             "q" to search,
@@ -173,8 +189,9 @@ suspend fun useApiWithToken(token: String, search: String) {
                 println("API call failed: ${ex.message}")
             }
             is com.github.kittinunf.result.Result.Success -> {
-                val symbol = result.get()
-                println("API call successful! Response: ${symbol}")
+                val symbolstring = (result.get()).replace("[", "").replace("]", "").split("},", )[0] + "}"
+                val symbol = Json.decodeFromString<ApiSymbolResponse>(symbolstring)
+                print(symbol.id)
             }
         }
     }

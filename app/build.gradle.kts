@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -40,11 +41,12 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
     implementation("com.github.kittinunf.fuel:fuel-gson:2.3.1")
     implementation("com.github.kittinunf.fuel:fuel-coroutines:2.3.1")
     implementation("com.github.kittinunf.fuel:fuel:2.3.1")
     implementation("com.github.kittinunf.fuel:fuel-android:2.3.1")
-    implementation("com.google.android.gms:play-services-cronet:18.1.0")
+    implementation("com.google.android.gms:play-services-cronet:18.1.1")
     implementation(platform("androidx.compose:compose-bom:2025.09.01"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
