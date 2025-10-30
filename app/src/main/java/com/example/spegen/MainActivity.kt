@@ -39,6 +39,25 @@ const val CLIENT_SECRET = "d65234627cc790cba662f6b3"
 var accesstoken = ""
 var expires_in = 0
 
+var id = 0
+var symbol_key = ""
+var name = ""
+var locale = ""
+var license = ""
+var license_url = ""
+var author = ""
+var author_url = ""
+var source_url: String? = ""
+var skins = false
+var repo_key = ""
+var hc = false
+var extension = ""
+var image_url = ""
+var search_string: String? = ""
+var unsafe_result = false
+var _href = ""
+var details_url = ""
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,10 +105,13 @@ fun TextSubmitButton() {
 fun OpenSymbolsButton() {
     val token =
     Column(modifier = Modifier.padding(30.dp)) {
+        val tts = rememberTextToSpeech()
         Button(onClick = {
             runBlocking {
-                useApiWithToken(getAccessToken(), text)
+                getAccessToken()
+                useApiWithToken(accesstoken, text)
             }
+            println(name)
         }
         ) {
             Text("Search")
@@ -125,24 +147,24 @@ data class AccessTokenResponse(
 @Serializable
 @JsonIgnoreUnknownKeys
 data class ApiSymbolResponse(
-    public val id: Int,
-    public val symbol_key: String,
-    public val name: String,
-    public val locale: String,
-    public val license: String,
-    public val license_url: String,
-    public val author: String,
-    public val author_url: String,
-    public val source_url: String? = null,
-    public val skins: Boolean? = false,
-    public val repo_key: String,
-    public val hc: Boolean? = false,
-    public val extension: String,
-    public val image_url: String,
-    public val search_string: String,
-    public val unsafe_result: Boolean,
-    public val _href: String,
-    public val details_url: String
+    val id: Int,
+    val symbol_key: String,
+    val name: String,
+    val locale: String,
+    val license: String,
+    val license_url: String,
+    val author: String,
+    val author_url: String,
+    val source_url: String? = null,
+    val skins: Boolean? = false,
+    val repo_key: String,
+    val hc: Boolean? = false,
+    val extension: String,
+    val image_url: String,
+    val search_string: String? = null,
+    val unsafe_result: Boolean,
+    val _href: String,
+    val details_url: String
 )
 
 
@@ -171,7 +193,7 @@ suspend fun getAccessToken(): AccessTokenResponse? {
 }
 
 
-suspend fun useApiWithToken(token: AccessTokenResponse?, search: String) {
+suspend fun useApiWithToken(token: String?, search: String) {
     withContext(Dispatchers.IO) {
         val params = listOf(
             "q" to search,
@@ -189,13 +211,45 @@ suspend fun useApiWithToken(token: AccessTokenResponse?, search: String) {
                 println("API call failed: ${ex.message}")
             }
             is com.github.kittinunf.result.Result.Success -> {
-                val symbolstring = (result.get()).replace("[", "").replace("]", "").split("},", )[0] + "}"
-                val symbol = Json.decodeFromString<ApiSymbolResponse>(symbolstring)
-                print(symbol.id)
+                println("Result.get: ${params}")
+                var symbolstring = (result.get()).replace("[", "").replace("]", "").split("},")[0]
+                if (symbolstring.length > 1) {
+                    symbolstring += "}"
+                }
+                print("Symbol String: $symbolstring")
+                if (symbolstring.count{ char -> char in "}" } > 0) {
+                    symbolstring = symbolstring.dropLast((symbolstring.count { char -> char in "}" })-1)
+                    print("Symbol String Drop: $symbolstring")
+                    val symbol = Json.decodeFromString<ApiSymbolResponse>(symbolstring)
+                    id = symbol.id
+                    symbol_key = symbol.symbol_key
+                    name = symbol.name
+                    locale = symbol.locale
+                    license = symbol.license
+                    license_url = symbol.license_url
+                    author = symbol.author
+                    author_url = symbol.author_url
+                    source_url = symbol.source_url
+                    skins = symbol.skins == false
+                    repo_key = symbol.repo_key
+                    hc = symbol.hc == false
+                    extension = symbol.extension
+                    image_url = symbol.image_url
+                    search_string = symbol.search_string
+                    unsafe_result = symbol.unsafe_result
+                    _href = symbol._href
+                    details_url = symbol.details_url
+                }
+                else {
+                    println("Result not found.")
+                    """Note: Tell the user that there were no results for the search; thats why the result.get was empty"""
+                }
             }
         }
     }
 }
+
+private fun String.count(predicate: String) {}
 
 @Composable
 fun Screen() {
