@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -21,15 +23,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.github.kittinunf.fuel.Fuel
-import java.util.Locale
 import com.github.kittinunf.fuel.gson.responseObject
+import com.github.kittinunf.result.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import com.github.kittinunf.result.Result
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
+import java.util.Locale
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import androidx.compose.ui.res.stringResource
+import coil3.compose.AsyncImage
 
 
 var text: String = ""
@@ -37,7 +52,6 @@ var text: String = ""
 const val CLIENT_SECRET = "d65234627cc790cba662f6b3"
 
 var accesstoken = ""
-var expires_in = 0
 
 var id = 0
 var symbol_key = ""
@@ -85,9 +99,25 @@ fun InputBox() {
 }
 
 @Composable
+fun Loadimages() {
+    if (image_url.isEmpty()) {
+        Image(
+            painter = painterResource(id = R.drawable.image_not_found_error),
+            contentDescription = "Image not found"
+        )
+    }
+    else {
+        AsyncImage(
+            model = image_url,
+            contentDescription = ""
+        )
+    }
+}
+
+@Composable
 fun TextSubmitButton() {
     val tts = rememberTextToSpeech()
-    Column(modifier = Modifier.padding(24.dp)) {
+    Column(modifier = Modifier.padding(24.dp).offset(x = 260.dp,10.dp)) {
         Button(onClick = {
             if (tts.value?.isSpeaking == true) {
                 tts.value?.stop()
@@ -103,19 +133,23 @@ fun TextSubmitButton() {
 
 @Composable
 fun OpenSymbolsButton() {
-    val token =
-    Column(modifier = Modifier.padding(30.dp)) {
-        val tts = rememberTextToSpeech()
+    var displayimages by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.padding(30.dp).offset(x = 260.dp, y = 60.dp)) {
         Button(onClick = {
             runBlocking {
                 getAccessToken()
                 useApiWithToken(accesstoken, text)
+                displayimages = true
             }
-            println(name)
         }
-        ) {
+        )
+        {
             Text("Search")
         }
+    }
+    if (displayimages) {
+        Loadimages()
+        displayimages = false
     }
 }
 
@@ -144,6 +178,7 @@ data class AccessTokenResponse(
     val expires_in: Long
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonIgnoreUnknownKeys
 data class ApiSymbolResponse(
@@ -166,7 +201,6 @@ data class ApiSymbolResponse(
     val _href: String,
     val details_url: String
 )
-
 
 suspend fun getAccessToken(): AccessTokenResponse? {
     return withContext(Dispatchers.IO) {
@@ -206,17 +240,15 @@ suspend fun useApiWithToken(token: String?, search: String) {
             .responseString()
 
         when (result) {
-            is com.github.kittinunf.result.Result.Failure -> {
+            is Result.Failure -> {
                 val ex = result.getException()
                 println("API call failed: ${ex.message}")
             }
-            is com.github.kittinunf.result.Result.Success -> {
-                println("Result.get: ${params}")
+            is Result.Success -> {
                 var symbolstring = (result.get()).replace("[", "").replace("]", "").split("},")[0]
                 if (symbolstring.length > 1) {
                     symbolstring += "}"
                 }
-                print("Symbol String: $symbolstring")
                 if (symbolstring.count{ char -> char in "}" } > 0) {
                     symbolstring = symbolstring.dropLast((symbolstring.count { char -> char in "}" })-1)
                     print("Symbol String Drop: $symbolstring")
@@ -240,16 +272,32 @@ suspend fun useApiWithToken(token: String?, search: String) {
                     _href = symbol._href
                     details_url = symbol.details_url
                 }
+
                 else {
-                    println("Result not found.")
-                    """Note: Tell the user that there were no results for the search; thats why the result.get was empty"""
+                    id = 0
+                    symbol_key = ""
+                    name = ""
+                    locale = ""
+                    license = ""
+                    license_url = ""
+                    author = ""
+                    author_url = ""
+                    source_url = ""
+                    skins = false
+                    repo_key = ""
+                    hc = false
+                    extension = ""
+                    image_url = ""
+                    search_string = ""
+                    unsafe_result = false
+                    _href = ""
+                    details_url = ""
                 }
             }
         }
     }
 }
 
-private fun String.count(predicate: String) {}
 
 @Composable
 fun Screen() {
