@@ -43,6 +43,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import coil3.compose.AsyncImage
 
@@ -72,6 +74,13 @@ var unsafe_result = false
 var _href = ""
 var details_url = ""
 
+var empty = true
+
+var screenHeight = 0.dp
+var screenWidth = 0.dp
+
+var alternate = false
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,17 +108,37 @@ fun InputBox() {
 }
 
 @Composable
+fun GetScreenDimensions() {
+    val configuration = LocalConfiguration.current
+    screenWidth = configuration.screenWidthDp.dp
+    screenHeight = configuration.screenHeightDp.dp
+}
+
+@Composable
 fun Loadimages() {
-    if (image_url.isEmpty()) {
+    println(screenWidth)
+    println(screenHeight)
+    println(image_url)
+    println(empty)
+    if (empty) {
+        println("EMPTY")
         Image(
             painter = painterResource(id = R.drawable.image_not_found_error),
-            contentDescription = "Image not found"
+            modifier = Modifier
+                .size(width = 60.dp, height = 60.dp)
+                .offset(x = (-50).dp, y = 20.dp),
+            contentDescription = "Image not found",
         )
     }
+
     else {
+        println("NOT EMPTY")
         AsyncImage(
-            model = image_url,
-            contentDescription = ""
+            image_url,
+            "Picture of $name",
+            modifier = Modifier
+                .size(width = 200.dp, height = 100.dp)
+                .offset(x = (-50).dp, y = 20.dp),
         )
     }
 }
@@ -133,23 +162,28 @@ fun TextSubmitButton() {
 
 @Composable
 fun OpenSymbolsButton() {
-    var displayimages by remember { mutableStateOf(false) }
+    var displayImages by remember { mutableStateOf(1) }
     Column(modifier = Modifier.padding(30.dp).offset(x = 260.dp, y = 60.dp)) {
         Button(onClick = {
             runBlocking {
+                alternate = !alternate
+                displayImages += 1
                 getAccessToken()
                 useApiWithToken(accesstoken, text)
-                displayimages = true
             }
-        }
-        )
-        {
+        }) {
             Text("Search")
         }
-    }
-    if (displayimages) {
-        Loadimages()
-        displayimages = false
+
+        println(alternate)
+
+        if (displayImages > 1 && alternate) {
+            Loadimages()
+        }
+
+        if (displayImages > 1 && !alternate) {
+            Loadimages()
+        }
     }
 }
 
@@ -251,7 +285,6 @@ suspend fun useApiWithToken(token: String?, search: String) {
                 }
                 if (symbolstring.count{ char -> char in "}" } > 0) {
                     symbolstring = symbolstring.dropLast((symbolstring.count { char -> char in "}" })-1)
-                    print("Symbol String Drop: $symbolstring")
                     val symbol = Json.decodeFromString<ApiSymbolResponse>(symbolstring)
                     id = symbol.id
                     symbol_key = symbol.symbol_key
@@ -271,6 +304,7 @@ suspend fun useApiWithToken(token: String?, search: String) {
                     unsafe_result = symbol.unsafe_result
                     _href = symbol._href
                     details_url = symbol.details_url
+                    empty = false
                 }
 
                 else {
@@ -292,6 +326,7 @@ suspend fun useApiWithToken(token: String?, search: String) {
                     unsafe_result = false
                     _href = ""
                     details_url = ""
+                    empty = true
                 }
             }
         }
@@ -301,6 +336,7 @@ suspend fun useApiWithToken(token: String?, search: String) {
 
 @Composable
 fun Screen() {
+    GetScreenDimensions()
     TextSubmitButton()
     InputBox()
     OpenSymbolsButton()
