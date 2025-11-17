@@ -155,15 +155,17 @@ fun TextSubmitButton() {
 @Composable
 fun Clickstuff() {
     var image_num by remember { mutableIntStateOf(0) }
+    var image_int by remember { mutableIntStateOf(0) }
     for (i in 1..display_images) {
+        image_num = i
+        image_int = i-1
         var displayImages by remember { mutableIntStateOf(1) }
         runBlocking {
             alternate = !alternate
             displayImages += 1
             getAccessToken()
-            useApiWithToken(accesstoken, text)
+            useApiWithToken(accesstoken, text, image_int)
         }
-        image_num = i
         if (displayImages > 1 && alternate) {
             Loadimages(image_num)
         }
@@ -268,7 +270,7 @@ suspend fun getAccessToken(): AccessTokenResponse? {
 }
 
 
-suspend fun useApiWithToken(token: String?, search: String) {
+suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int) {
     withContext(Dispatchers.IO) {
         val params = listOf(
             "q" to search,
