@@ -33,19 +33,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 import java.util.Locale
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.Image
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.asImageBitmap
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.times
 import coil3.compose.AsyncImage
 
 
@@ -81,6 +74,10 @@ var screenWidth = 0.dp
 
 var alternate = false
 
+var alternate_button = false
+
+var display_images = 6
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,32 +112,27 @@ fun GetScreenDimensions() {
 }
 
 @Composable
-fun Loadimages() {
-    println(screenWidth)
-    println(screenHeight)
-    println(image_url)
-    println(empty)
+fun Loadimages(image_number: Int) {
     if (empty) {
-        println("EMPTY")
         Image(
             painter = painterResource(id = R.drawable.image_not_found_error),
             modifier = Modifier
-                .size(width = 60.dp, height = 60.dp)
-                .offset(x = (-50).dp, y = 20.dp),
+                .requiredSize(width = (1.27226463104*screenWidth), height = (1.17508813161*screenHeight))
+                .offset(x = (-(0.63613231552*screenWidth)), y = (0.02350176263*screenHeight)),
             contentDescription = "Image not found",
         )
     }
 
     else {
-        println("NOT EMPTY")
-        AsyncImage(
-            image_url,
-            "Picture of $name",
-            modifier = Modifier
-                .size(width = 200.dp, height = 100.dp)
-                .offset(x = (-50).dp, y = 20.dp),
-        )
-    }
+            AsyncImage(
+                image_url,
+                "Picture of $name",
+                modifier = Modifier
+                    .padding(screenWidth / 8)
+                    .size(width = screenWidth / 3, height = screenHeight / 8)
+                    .offset(x = (-(0.1272264631 * screenWidth)), y = (0.02350176263 * screenHeight))
+            )
+        }
 }
 
 @Composable
@@ -161,28 +153,43 @@ fun TextSubmitButton() {
 }
 
 @Composable
-fun OpenSymbolsButton() {
-    var displayImages by remember { mutableStateOf(1) }
-    Column(modifier = Modifier.padding(30.dp).offset(x = 260.dp, y = 60.dp)) {
-        Button(onClick = {
-            runBlocking {
-                alternate = !alternate
-                displayImages += 1
-                getAccessToken()
-                useApiWithToken(accesstoken, text)
-            }
-        }) {
-            Text("Search")
+fun Clickstuff() {
+    var image_num by remember { mutableIntStateOf(0) }
+    for (i in 1..display_images) {
+        var displayImages by remember { mutableIntStateOf(1) }
+        runBlocking {
+            alternate = !alternate
+            displayImages += 1
+            getAccessToken()
+            useApiWithToken(accesstoken, text)
         }
-
-        println(alternate)
-
+        image_num = i
         if (displayImages > 1 && alternate) {
-            Loadimages()
+            Loadimages(image_num)
         }
 
         if (displayImages > 1 && !alternate) {
-            Loadimages()
+            Loadimages(image_num)
+        }
+    }
+}
+
+@Composable
+fun OpenSymbolsButton() {
+    var displayImages by remember { mutableIntStateOf(1) }
+    Column(modifier = Modifier.padding(30.dp).offset(x = 260.dp, y = 60.dp)) {
+        Button(onClick = {
+            displayImages += 1
+            alternate_button = !alternate_button
+        }) {
+            Text("Search")
+        }
+        if (displayImages > 1 && alternate_button) {
+            Clickstuff()
+        }
+
+        if (displayImages > 1 && !alternate_button) {
+            Clickstuff()
         }
     }
 }
