@@ -41,13 +41,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.times
 import coil3.compose.AsyncImage
 
-
+// Text box text variable
 var text: String = ""
 
+// Shared secret which is used for calling for an access token
 const val CLIENT_SECRET = "d65234627cc790cba662f6b3"
 
+// Access token that is used for calling to the API
 var accesstoken = ""
 
+// These are all of the variables that update whenever an image is called based off of its properties to allow for global use.
 var id = 0
 var symbol_key = ""
 var name = ""
@@ -67,15 +70,20 @@ var unsafe_result = false
 var _href = ""
 var details_url = ""
 
+// Variable that will update if the image is not found or is empty. Used in the LoadImages function.
 var empty = true
 
+// Screen height and width variables as determined by GetScreenDimensions()
 var screenHeight = 0.dp
 var screenWidth = 0.dp
 
+// Ensures that the function that manages image display is always ran through changing this value when OpenSymbolsButton is clicked
 var alternate = false
 
+// See above, only this one is for SymbolsButtonExec
 var alternate_button = false
 
+// Amount of images that should be displayed on screen when calling for images
 var display_images = 6
 
 
@@ -90,6 +98,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun InputBox() {
+    // Text box that automatically updates the text variable to whatever the user types
     var text by remember { mutableStateOf("") }
     TextField(
         value = text,
@@ -106,6 +115,7 @@ fun InputBox() {
 
 @Composable
 fun GetScreenDimensions() {
+    // Function that gets the dimensions of the screen for later use in UI scaling
     val configuration = LocalConfiguration.current
     screenWidth = configuration.screenWidthDp.dp
     screenHeight = configuration.screenHeightDp.dp
@@ -113,6 +123,7 @@ fun GetScreenDimensions() {
 
 @Composable
 fun Loadimages(image_number: Int) {
+    // Displays images and controls their position and size. If no images are found it will display an image not found (See drawables in resource folder)
     if (empty) {
         Image(
             painter = painterResource(id = R.drawable.image_not_found_error),
@@ -137,6 +148,7 @@ fun Loadimages(image_number: Int) {
 
 @Composable
 fun TextSubmitButton() {
+    // Button that converts the value in the text box to TTS.
     val tts = rememberTextToSpeech()
     Column(modifier = Modifier.padding(24.dp).offset(x = 260.dp,10.dp)) {
         Button(onClick = {
@@ -153,7 +165,8 @@ fun TextSubmitButton() {
 }
 
 @Composable
-fun Clickstuff() {
+fun SymbolsButtonExec() {
+    // Oversees calling to the OpenSymbols API by calling several sub-functions
     var image_num by remember { mutableIntStateOf(0) }
     var image_int by remember { mutableIntStateOf(0) }
     for (i in 1..display_images) {
@@ -178,6 +191,7 @@ fun Clickstuff() {
 
 @Composable
 fun OpenSymbolsButton() {
+    // Button that will execute SymbolsButtonExec; used for initiating interaction with OpenSymbols API
     var displayImages by remember { mutableIntStateOf(1) }
     Column(modifier = Modifier.padding(30.dp).offset(x = 260.dp, y = 60.dp)) {
         Button(onClick = {
@@ -187,17 +201,18 @@ fun OpenSymbolsButton() {
             Text("Search")
         }
         if (displayImages > 1 && alternate_button) {
-            Clickstuff()
+            SymbolsButtonExec()
         }
 
         if (displayImages > 1 && !alternate_button) {
-            Clickstuff()
+            SymbolsButtonExec()
         }
     }
 }
 
 @Composable
 fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
+    // Handles TTS and its properties
     val context = LocalContext.current
     val tts = remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(context) {
@@ -217,6 +232,7 @@ fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
 }
 
 data class AccessTokenResponse(
+    // Data class for getAccessToken to allow to parse the response data
     val access_token: String,
     val expires_in: Long
 )
@@ -225,6 +241,7 @@ data class AccessTokenResponse(
 @Serializable
 @JsonIgnoreUnknownKeys
 data class ApiSymbolResponse(
+    // Data class for useApiWithToken to allow to parse the response data
     val id: Int,
     val symbol_key: String,
     val name: String,
@@ -246,6 +263,7 @@ data class ApiSymbolResponse(
 )
 
 suspend fun getAccessToken(): AccessTokenResponse? {
+    // Gets a new access token using the shared secret
     return withContext(Dispatchers.IO) {
         val params = listOf(
             "secret" to CLIENT_SECRET
@@ -271,6 +289,8 @@ suspend fun getAccessToken(): AccessTokenResponse? {
 
 
 suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int) {
+    // Uses access token to get image data
+
     withContext(Dispatchers.IO) {
         val params = listOf(
             "q" to search,
@@ -345,6 +365,7 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
 
 @Composable
 fun Screen() {
+    // Function that is called on application creation to display and call all of the other visible composable functions
     GetScreenDimensions()
     TextSubmitButton()
     InputBox()
