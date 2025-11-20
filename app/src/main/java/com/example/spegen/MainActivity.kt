@@ -1,27 +1,31 @@
 package com.example.spegen
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
+import coil3.compose.AsyncImage
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.Result
@@ -33,13 +37,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 import java.util.Locale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.times
-import coil3.compose.AsyncImage
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
+
 
 // Text box text variable
 var text: String = ""
@@ -86,6 +86,11 @@ var alternate_button = false
 // Amount of images that should be displayed on screen when calling for images
 var display_images = 6
 
+// Is the device in landscape?
+var isLandscape = false
+
+var image_names = mutableListOf("")
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,22 +121,48 @@ fun InputBox() {
 @Composable
 fun GetScreenDimensions() {
     // Function that gets the dimensions of the screen for later use in UI scaling
-    val configuration = LocalConfiguration.current
+    var configuration = LocalConfiguration.current
     screenWidth = configuration.screenWidthDp.dp
     screenHeight = configuration.screenHeightDp.dp
+    configuration = LocalConfiguration.current
+    isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
 @Composable
 fun Loadimages(image_number: Int) {
     // Displays images and controls their position and size. If no images are found it will display an image not found (See drawables in resource folder)
     if (empty) {
-        Image(
-            painter = painterResource(id = R.drawable.image_not_found_error),
-            modifier = Modifier
-                .requiredSize(width = (1.27226463104*screenWidth), height = (1.17508813161*screenHeight))
-                .offset(x = (-(0.63613231552*screenWidth)), y = (0.02350176263*screenHeight)),
-            contentDescription = "Image not found",
-        )
+        if (!isLandscape) {
+            Image(
+                painter = painterResource(id = R.drawable.image_not_found_error),
+                modifier = Modifier
+                    .requiredSize(
+                        width = (1.27226463104 * screenWidth),
+                        height = (1.17508813161 * screenHeight)
+                    )
+                    .offset(
+                        x = (-(0.63613231552 * screenWidth)),
+                        y = (0.02350176263 * screenHeight)
+                    ),
+                contentDescription = "Image not found",
+            )
+        }
+
+        else {
+            Image(
+                painter = painterResource(id = R.drawable.image_not_found_error),
+                modifier = Modifier
+                    .requiredSize(
+                        width = (1.27226463104 * screenWidth),
+                        height = (0.8 * screenHeight)
+                    )
+                    .offset(
+                        x = (-(0.2 * screenWidth)),
+                        y = (0.02350176263 * screenHeight)
+                    ),
+                contentDescription = "Image not found"
+            )
+        }
     }
 
     else {
@@ -141,16 +172,41 @@ fun Loadimages(image_number: Int) {
                 modifier = Modifier
                     .padding(screenWidth / 8)
                     .size(width = screenWidth / 3, height = screenHeight / 8)
-                    .offset(x = (-(0.1272264631 * screenWidth)), y = (0.02350176263 * screenHeight))
+                    .offset(
+                        x = (-(0.1272264631 * screenWidth)),
+                        y = ((0.02350176263 * screenHeight))
+                    )
+            )
+        Image_overlay((-(0.1272264631 * screenWidth)), ((0.02350176263 * screenHeight)), image_names, (image_number-1))
+        }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun Image_overlay(x_offset: Dp, y_offset: Dp, names: MutableList<String>, image_number: Int) {
+    val tts = rememberTextToSpeech()
+    Box(modifier = Modifier
+        .offset(x = x_offset, y_offset)) {
+        TextButton(onClick = {
+            if (tts.value?.isSpeaking == true) {
+                tts.value?.stop()
+            } else tts.value?.speak(
+                names[image_number], TextToSpeech.QUEUE_FLUSH, null, ""
             )
         }
+        ) {
+            Text("Submit")
+        }
+    }
 }
 
 @Composable
 fun TextSubmitButton() {
     // Button that converts the value in the text box to TTS.
     val tts = rememberTextToSpeech()
-    Column(modifier = Modifier.padding(24.dp).offset(x = 260.dp,10.dp)) {
+    Column(modifier = Modifier
+        .padding(24.dp)
+        .offset(x = 260.dp, 10.dp)) {
         Button(onClick = {
             if (tts.value?.isSpeaking == true) {
                 tts.value?.stop()
@@ -169,6 +225,7 @@ fun SymbolsButtonExec() {
     // Oversees calling to the OpenSymbols API by calling several sub-functions
     var image_num by remember { mutableIntStateOf(0) }
     var image_int by remember { mutableIntStateOf(0) }
+    image_names.clear()
     for (i in 1..display_images) {
         image_num = i
         image_int = i-1
@@ -179,6 +236,14 @@ fun SymbolsButtonExec() {
             getAccessToken()
             useApiWithToken(accesstoken, text, image_int)
         }
+
+        image_names += name
+
+        if (empty) {
+            Loadimages(image_num)
+            return
+        }
+
         if (displayImages > 1 && alternate) {
             Loadimages(image_num)
         }
@@ -193,7 +258,9 @@ fun SymbolsButtonExec() {
 fun OpenSymbolsButton() {
     // Button that will execute SymbolsButtonExec; used for initiating interaction with OpenSymbols API
     var displayImages by remember { mutableIntStateOf(1) }
-    Column(modifier = Modifier.padding(30.dp).offset(x = 260.dp, y = 60.dp)) {
+    Column(modifier = Modifier
+        .padding(30.dp)
+        .offset(x = 260.dp, y = 60.dp)) {
         Button(onClick = {
             displayImages += 1
             alternate_button = !alternate_button
@@ -308,7 +375,7 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
                 println("API call failed: ${ex.message}")
             }
             is Result.Success -> {
-                var symbolstring = (result.get()).replace("[", "").replace("]", "").split("},")[0]
+                var symbolstring = (result.get()).replace("[", "").replace("]", "").split("},")[image_iteration]
                 if (symbolstring.length > 1) {
                     symbolstring += "}"
                 }
