@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -38,7 +37,21 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 import java.util.Locale
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntSize
 
 
 // Text box text variable
@@ -166,37 +179,28 @@ fun Loadimages(image_number: Int) {
     }
 
     else {
-            AsyncImage(
-                image_url,
-                "Picture of $name",
-                modifier = Modifier
-                    .padding(screenWidth / 8)
-                    .size(width = screenWidth / 3, height = screenHeight / 8)
-                    .offset(
-                        x = (-(0.1272264631 * screenWidth)),
-                        y = ((0.02350176263 * screenHeight))
+        var ParentPos by remember { mutableStateOf(Offset.Zero) }
+        var RootPos by remember { mutableStateOf(Offset.Zero) }
+        var imageSize by remember { mutableStateOf(IntSize.Zero) }
+        val tts = rememberTextToSpeech()
+        AsyncImage(
+            image_url,
+            "Picture of $name",
+            modifier = Modifier
+                .padding(screenWidth / 8)
+                .size(width = screenWidth / 3, height = screenHeight / 8)
+                .offset(
+                    x = (-(0.1272264631 * screenWidth)),
+                    y = ((0.02350176263 * screenHeight))
+                )
+                .clickable(onClick = {
+                    if (tts.value?.isSpeaking == true) {
+                        tts.value?.stop()
+                    } else tts.value?.speak(
+                        image_names[(image_number-1)], TextToSpeech.QUEUE_FLUSH, null, ""
                     )
-            )
-        Image_overlay((-(0.1272264631 * screenWidth)), ((0.02350176263 * screenHeight)), image_names, (image_number-1))
-        }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun Image_overlay(x_offset: Dp, y_offset: Dp, names: MutableList<String>, image_number: Int) {
-    val tts = rememberTextToSpeech()
-    Box(modifier = Modifier
-        .offset(x = x_offset, y_offset)) {
-        TextButton(onClick = {
-            if (tts.value?.isSpeaking == true) {
-                tts.value?.stop()
-            } else tts.value?.speak(
-                names[image_number], TextToSpeech.QUEUE_FLUSH, null, ""
-            )
-        }
-        ) {
-            Text("Submit")
-        }
+                })
+        )
     }
 }
 
