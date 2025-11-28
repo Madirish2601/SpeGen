@@ -6,7 +6,6 @@ import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -14,9 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalConfiguration
@@ -38,20 +35,8 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.Dp
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.IntSize
+import coil3.request.ImageRequest
 
 
 // Text box text variable
@@ -179,12 +164,11 @@ fun Loadimages(image_number: Int) {
     }
 
     else {
-        var ParentPos by remember { mutableStateOf(Offset.Zero) }
-        var RootPos by remember { mutableStateOf(Offset.Zero) }
-        var imageSize by remember { mutableStateOf(IntSize.Zero) }
         val tts = rememberTextToSpeech()
         AsyncImage(
-            image_url,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(image_url)
+                .build(),
             "Picture of $name",
             modifier = Modifier
                 .padding(screenWidth / 8)
@@ -386,6 +370,7 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
                 if (symbolstring.count{ char -> char in "}" } > 0) {
                     symbolstring = symbolstring.dropLast((symbolstring.count { char -> char in "}" })-1)
                     val symbol = Json.decodeFromString<ApiSymbolResponse>(symbolstring)
+                    println(symbolstring)
                     id = symbol.id
                     symbol_key = symbol.symbol_key
                     name = symbol.name

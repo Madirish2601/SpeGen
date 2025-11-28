@@ -43,6 +43,7 @@ android {
 dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+    implementation("io.coil-kt.coil3:coil-svg:3.0.4")
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material3:material3:${1.4}")
     implementation(libs.androidx.material.icon.extended)
