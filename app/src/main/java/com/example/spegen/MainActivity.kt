@@ -36,7 +36,26 @@ import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import coil3.request.ImageRequest
+import kotlin.math.floor
+import android.content.res.Resources
+import android.service.autofill.Validators.or
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import com.example.spegen.lazy_images_exceeding
+import java.security.KeyStore
+import kotlin.math.abs
+import kotlin.math.floor
 
 
 // Text box text variable
@@ -89,6 +108,12 @@ var isLandscape = false
 
 var image_names = mutableListOf("")
 
+var image_urls = mutableListOf("")
+
+var lazy_images_exceeding = false
+
+var image_number = 0
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,8 +151,32 @@ fun GetScreenDimensions() {
     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
+
 @Composable
-fun Loadimages(image_number: Int) {
+fun GridDisplay() {
+    LazyHorizontalGrid (
+        rows = GridCells.Adaptive((200).dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp),
+        contentPadding = PaddingValues(1.dp),
+        userScrollEnabled = true,
+
+        modifier = Modifier.fillMaxSize().offset(x=(abs((floor(((screenWidth)/100).toString().substringBefore(".").toInt().toDouble()) * 100))*-1).dp, y = 8.dp)
+
+    ) {
+        var image_display_number = 0
+        image_number = 0
+        items(display_images) { item ->
+            Loadimages(image_display_number)
+            image_display_number += 1
+            image_number += 1
+        }
+    }
+
+}
+
+@Composable
+fun Loadimages(image_num: Int) {
     // Displays images and controls their position and size. If no images are found it will display an image not found (See drawables in resource folder)
     if (empty) {
         if (!isLandscape) {
@@ -167,21 +216,17 @@ fun Loadimages(image_number: Int) {
         val tts = rememberTextToSpeech()
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(image_url)
+                .data(image_urls[image_number])
                 .build(),
-            "Picture of $name",
+            "Picture of ${image_names[0]}",
             modifier = Modifier
                 .padding(screenWidth / 8)
                 .size(width = screenWidth / 3, height = screenHeight / 8)
-                .offset(
-                    x = (-(0.1272264631 * screenWidth)),
-                    y = ((0.02350176263 * screenHeight))
-                )
                 .clickable(onClick = {
                     if (tts.value?.isSpeaking == true) {
                         tts.value?.stop()
                     } else tts.value?.speak(
-                        image_names[(image_number-1)], TextToSpeech.QUEUE_FLUSH, null, ""
+                        (image_names[image_num]), TextToSpeech.QUEUE_FLUSH, null, ""
                     )
                 })
         )
@@ -214,6 +259,7 @@ fun SymbolsButtonExec() {
     var image_num by remember { mutableIntStateOf(0) }
     var image_int by remember { mutableIntStateOf(0) }
     image_names.clear()
+    image_urls.clear()
     for (i in 1..display_images) {
         image_num = i
         image_int = i-1
@@ -227,17 +273,19 @@ fun SymbolsButtonExec() {
 
         image_names += name
 
+        image_urls += image_url
+
         if (empty) {
-            Loadimages(image_num)
+            Loadimages(0)
             return
         }
 
         if (displayImages > 1 && alternate) {
-            Loadimages(image_num)
+            GridDisplay()
         }
 
         if (displayImages > 1 && !alternate) {
-            Loadimages(image_num)
+            GridDisplay()
         }
     }
 }
@@ -370,7 +418,6 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
                 if (symbolstring.count{ char -> char in "}" } > 0) {
                     symbolstring = symbolstring.dropLast((symbolstring.count { char -> char in "}" })-1)
                     val symbol = Json.decodeFromString<ApiSymbolResponse>(symbolstring)
-                    println(symbolstring)
                     id = symbol.id
                     symbol_key = symbol.symbol_key
                     name = symbol.name
