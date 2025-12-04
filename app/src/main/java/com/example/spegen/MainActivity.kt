@@ -46,16 +46,23 @@ import kotlin.math.floor
 import android.content.res.Resources
 import android.service.autofill.Validators.or
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.spegen.lazy_images_exceeding
+import java.lang.Math.sqrt
 import java.security.KeyStore
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.max
 
 
 // Text box text variable
@@ -114,6 +121,10 @@ var lazy_images_exceeding = false
 
 var image_number = 0
 
+var maxItems = display_images
+
+val paddingDividend = 20
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -154,25 +165,55 @@ fun GetScreenDimensions() {
 
 @Composable
 fun GridDisplay() {
-    LazyHorizontalGrid (
-        rows = GridCells.Adaptive((200).dp),
-        horizontalArrangement = Arrangement.spacedBy(1.dp),
-        verticalArrangement = Arrangement.spacedBy(1.dp),
-        contentPadding = PaddingValues(1.dp),
-        userScrollEnabled = true,
+    if (((sqrt(display_images.toDouble())) % 1) == 0.0 ) {
+        maxItems = sqrt(display_images.toDouble()).toInt()
+    }
+    else {
+        var closestPair: Pair<Int, Int>? = null
+        var minDifference = Int.MAX_VALUE
+        for (i in 2..sqrt(display_images.toDouble()).toInt()) {
+            if (display_images % i == 0) {
+                val factor1 = i
+                val factor2 = display_images / i
 
-        modifier = Modifier.fillMaxSize().offset(x=(abs((floor(((screenWidth)/100).toString().substringBefore(".").toInt().toDouble()) * 100))*-1).dp, y = 8.dp)
+                // Exclude the case where factor1 or factor2 is the number itself (e.g., for primes)
+                if (factor1 == display_images || factor2 == display_images) {
+                    continue
+                }
 
-    ) {
-        var image_display_number = 0
-        image_number = 0
-        items(display_images) { item ->
-            Loadimages(image_display_number)
-            image_display_number += 1
-            image_number += 1
+                val currentDifference = abs(factor1 - factor2)
+
+                if (currentDifference < minDifference) {
+                    minDifference = currentDifference
+                    closestPair = Pair(factor1, factor2)
+                }
+            }
+
+            if (isLandscape) {
+                maxItems = closestPair?.second ?: maxItems
+            } else {
+                maxItems = closestPair?.first ?: maxItems
+            }
         }
     }
-
+        FlowRow(
+            maxItemsInEachRow = maxItems,
+            modifier = Modifier.fillMaxWidth().fillMaxHeight().offset(
+                x = (abs(
+                    (floor(
+                        ((screenWidth) / 100).toString().substringBefore(".").toInt().toDouble()
+                    ) * 100)
+                ) * -1).dp, y = 70.dp
+            ),
+        ) {
+            var image_display_number = 0
+            image_number = 0
+            image_names.forEach { item ->
+                Loadimages(image_display_number)
+                image_display_number += 1
+                image_number += 1
+            }
+        }
 }
 
 @Composable
@@ -220,8 +261,9 @@ fun Loadimages(image_num: Int) {
                 .build(),
             "Picture of ${image_names[0]}",
             modifier = Modifier
-                .padding(screenWidth / 8)
-                .size(width = screenWidth / 3, height = screenHeight / 8)
+                .padding(screenWidth / paddingDividend)
+                .width((screenWidth/maxItems)-(screenWidth/paddingDividend))
+                .aspectRatio(1f)
                 .clickable(onClick = {
                     if (tts.value?.isSpeaking == true) {
                         tts.value?.stop()
@@ -262,7 +304,7 @@ fun SymbolsButtonExec() {
     image_urls.clear()
     for (i in 1..display_images) {
         image_num = i
-        image_int = i-1
+        image_int = i - 1
         var displayImages by remember { mutableIntStateOf(1) }
         runBlocking {
             alternate = !alternate
@@ -279,15 +321,8 @@ fun SymbolsButtonExec() {
             Loadimages(0)
             return
         }
-
-        if (displayImages > 1 && alternate) {
-            GridDisplay()
-        }
-
-        if (displayImages > 1 && !alternate) {
-            GridDisplay()
-        }
     }
+    GridDisplay()
 }
 
 @Composable
