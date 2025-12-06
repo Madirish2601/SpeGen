@@ -108,7 +108,7 @@ var alternate = false
 var alternate_button = false
 
 // Amount of images that should be displayed on screen when calling for images
-var display_images = 6
+var display_images = 16
 
 // Is the device in landscape?
 var isLandscape = false
@@ -123,7 +123,7 @@ var image_number = 0
 
 var maxItems = display_images
 
-val paddingDividend = 20
+val paddingDividend = 50
 
 
 class MainActivity : ComponentActivity() {
@@ -147,7 +147,7 @@ fun InputBox() {
         },
         label = { Text("Image Search") },
         modifier = Modifier
-            .padding(vertical = 150.dp)
+            .padding(top = 150.dp)
             .fillMaxWidth()
     )
 }
@@ -196,6 +196,7 @@ fun GridDisplay() {
             }
         }
     }
+    maxItems+=1
         FlowRow(
             maxItemsInEachRow = maxItems,
             modifier = Modifier.fillMaxWidth().fillMaxHeight().offset(
@@ -203,7 +204,10 @@ fun GridDisplay() {
                     (floor(
                         ((screenWidth) / 100).toString().substringBefore(".").toInt().toDouble()
                     ) * 100)
-                ) * -1).dp, y = 70.dp
+                ) * -1).dp+((abs(
+                    (floor(
+                        ((screenWidth) / 100).toString().substringBefore(".").toInt().toDouble()
+                    ) * 100)))*0.13.dp), y = 70.dp
             ),
         ) {
             var image_display_number = 0
@@ -254,15 +258,18 @@ fun Loadimages(image_num: Int) {
     }
 
     else {
+        //EQUATION NEEDS TO ADD 17 TO GET 4 IMAGES INSTEAD OF 3
+        println(maxItems)
+        println(screenWidth/paddingDividend)
         val tts = rememberTextToSpeech()
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(image_urls[image_number])
                 .build(),
-            "Picture of ${image_names[0]}",
+            "Picture of ${image_names[image_num]}",
             modifier = Modifier
                 .padding(screenWidth / paddingDividend)
-                .width((screenWidth/maxItems)-(screenWidth/paddingDividend))
+                .width((((screenWidth-((maxItems)*(screenWidth/paddingDividend)))).toString().substringBefore(".").toInt().toDouble()/(maxItems-1)).dp-(screenWidth/paddingDividend))
                 .aspectRatio(1f)
                 .clickable(onClick = {
                     if (tts.value?.isSpeaking == true) {
@@ -280,8 +287,7 @@ fun TextSubmitButton() {
     // Button that converts the value in the text box to TTS.
     val tts = rememberTextToSpeech()
     Column(modifier = Modifier
-        .padding(24.dp)
-        .offset(x = 260.dp, 10.dp)) {
+        .offset(x = 260.dp, 34.dp)) {
         Button(onClick = {
             if (tts.value?.isSpeaking == true) {
                 tts.value?.stop()
@@ -330,8 +336,7 @@ fun OpenSymbolsButton() {
     // Button that will execute SymbolsButtonExec; used for initiating interaction with OpenSymbols API
     var displayImages by remember { mutableIntStateOf(1) }
     Column(modifier = Modifier
-        .padding(30.dp)
-        .offset(x = 260.dp, y = 60.dp)) {
+        .offset(x = 260.dp, y = 90.dp)) {
         Button(onClick = {
             displayImages += 1
             alternate_button = !alternate_button
