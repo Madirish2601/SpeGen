@@ -108,7 +108,7 @@ var alternate = false
 var alternate_button = false
 
 // Amount of images that should be displayed on screen when calling for images
-var display_images = 16
+var display_images = 8
 
 // Is the device in landscape?
 var isLandscape = false
@@ -258,9 +258,7 @@ fun Loadimages(image_num: Int) {
     }
 
     else {
-        //EQUATION NEEDS TO ADD 17 TO GET 4 IMAGES INSTEAD OF 3
-        println(maxItems)
-        println(screenWidth/paddingDividend)
+        println((((screenWidth-((maxItems)*(screenWidth/paddingDividend)))).toString().substringBefore(".").toInt().toDouble()/(maxItems-1)).dp-(screenWidth/paddingDividend))
         val tts = rememberTextToSpeech()
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -270,7 +268,7 @@ fun Loadimages(image_num: Int) {
             modifier = Modifier
                 .padding(screenWidth / paddingDividend)
                 .width((((screenWidth-((maxItems)*(screenWidth/paddingDividend)))).toString().substringBefore(".").toInt().toDouble()/(maxItems-1)).dp-(screenWidth/paddingDividend))
-                .aspectRatio(1f)
+                .aspectRatio((screenHeight/(screenWidth.toString().substringBefore(".").toInt().toDouble()+(((abs((floor(((screenWidth) / 100).toString().substringBefore(".").toInt().toDouble()) * 100)))))).dp))
                 .clickable(onClick = {
                     if (tts.value?.isSpeaking == true) {
                         tts.value?.stop()
