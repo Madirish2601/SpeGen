@@ -47,6 +47,7 @@ import android.content.res.Resources
 import android.service.autofill.Validators.or
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -55,6 +56,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.spegen.lazy_images_exceeding
@@ -130,26 +132,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Screen()
+            Buttonsettings()
         }
     }
-}
-
-@Composable
-fun InputBox() {
-    // Text box that automatically updates the text variable to whatever the user types
-    var text by remember { mutableStateOf("") }
-    TextField(
-        value = text,
-        onValueChange = {
-                newText -> text = newText
-            com.example.spegen.text = text
-        },
-        label = { Text("Image Search") },
-        modifier = Modifier
-            .padding(top = 150.dp)
-            .fillMaxWidth()
-    )
 }
 
 @Composable
@@ -197,7 +182,7 @@ fun GridDisplay() {
         }
     }
     maxItems+=1
-        FlowRow(
+    FlowRow(
             maxItemsInEachRow = maxItems,
             modifier = Modifier.fillMaxWidth().fillMaxHeight().offset(
                 x = (abs(
@@ -285,7 +270,7 @@ fun TextSubmitButton() {
     // Button that converts the value in the text box to TTS.
     val tts = rememberTextToSpeech()
     Column(modifier = Modifier
-        .offset(x = 260.dp, 34.dp)) {
+        .offset(x = 260.dp, 0.dp)) {
         Button(onClick = {
             if (tts.value?.isSpeaking == true) {
                 tts.value?.stop()
@@ -334,7 +319,7 @@ fun OpenSymbolsButton() {
     // Button that will execute SymbolsButtonExec; used for initiating interaction with OpenSymbols API
     var displayImages by remember { mutableIntStateOf(1) }
     Column(modifier = Modifier
-        .offset(x = 260.dp, y = 90.dp)) {
+        .offset(x = 50.dp, y = 0.dp)) {
         Button(onClick = {
             displayImages += 1
             alternate_button = !alternate_button
@@ -503,12 +488,19 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
     }
 }
 
+@Composable
+fun Buttonsettings() {
+                Button(
+                    modifier = Modifier
+                        .absoluteOffset(x = 50.dp),
+                    onClick = {
+                        println("HI")
+                }) {
+                    Text("Search")
+                }
+}
 
 @Composable
 fun Screen() {
-    // Function that is called on application creation to display and call all of the other visible composable functions
-    GetScreenDimensions()
-    TextSubmitButton()
-    InputBox()
-    OpenSymbolsButton()
+    Buttonsettings()
 }

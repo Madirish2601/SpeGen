@@ -4,16 +4,19 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-12-03T14:55:02.976278Z">
+        <DropdownSelection timestamp="2026-01-12T01:00:11.761815Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/hklein-keane/.android/avd/Pixel_4a.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/hklein-keane/.android/avd/Medium_Tablet.avd" />
             </handle>
           </Target>
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
       <SelectionState runConfigName="MainActivity">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="Buttonsettings">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
