@@ -11,8 +11,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![Commits][commits-shield]][commits-url]
-
-
+[![OpenAAC](https://www.openaac.org/images/OpenAAC-chat-red.svg)](https://www.openaac.org/advocates.html)
 
 <!-- PROJECT LOGO -->
 <br />
