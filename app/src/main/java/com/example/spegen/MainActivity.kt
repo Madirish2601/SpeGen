@@ -65,6 +65,9 @@ import java.security.KeyStore
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.fillMaxSize
 
 
 // Text box text variable
@@ -97,7 +100,7 @@ var _href = ""
 var details_url = ""
 
 // Variable that will update if the image is not found or is empty. Used in the LoadImages function.
-var empty = true
+var empty = false
 
 // Screen height and width variables as determined by GetScreenDimensions()
 var screenHeight = 0.dp
@@ -132,7 +135,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Buttonsettings()
+            Surface(modifier = Modifier.fillMaxSize(), color = Color.White)
+            {
+                Screen()
+            }
         }
     }
 }
@@ -490,14 +496,17 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
 
 @Composable
 fun Buttonsettings() {
-                Button(
-                    modifier = Modifier
-                        .absoluteOffset(x = 50.dp),
-                    onClick = {
-                        println("HI")
-                }) {
-                    Text("Search")
-                }
+    Column(
+        modifier = Modifier
+            .absoluteOffset(x = 300.dp),
+    ) {
+        Button(
+            onClick = {
+                println("HI")
+            }) {
+            Text("Search")
+        }
+    }
 }
 
 @Composable
