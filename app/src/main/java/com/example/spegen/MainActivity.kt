@@ -45,6 +45,9 @@ import coil3.request.ImageRequest
 import kotlin.math.floor
 import android.content.res.Resources
 import android.service.autofill.Validators.or
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.absoluteOffset
@@ -68,6 +71,11 @@ import kotlin.math.max
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 
 
 // Text box text variable
@@ -494,22 +502,101 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
     }
 }
 
+
 @Composable
-fun Buttonsettings() {
-    Column(
-        modifier = Modifier
-            .absoluteOffset(x = 300.dp),
-    ) {
-        Button(
-            onClick = {
-                println("HI")
-            }) {
-            Text("Search")
+fun Buttonboxes() {
+    val x_offset = 1215
+    //TOP RIGHT
+    Column() {
+        Box(
+            modifier = Modifier
+                .offset(x_offset.dp)
+                .size(70.dp)
+                .background(color = Color.White)
+                .border(border = BorderStroke(2.dp, Color.Black))
+                .clickable(onClick = {
+                })
+        ) {
+            Text(text = "Settings", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }
     }
+    //MIDDLE RIGHT
+    Column() {
+        Box(
+            modifier = Modifier
+                .offset(x_offset.dp, 70.dp)
+                .size(70.dp)
+                .background(color = Color.White)
+                .border(border = BorderStroke(2.dp, Color.Black))
+                .clickable(onClick = {
+                })
+        ) {
+            Text(text = "Delete", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }
+    }
+    //BOTTOM RIGHT
+    Column() {
+        Box(
+            modifier = Modifier
+                .offset(x_offset.dp, 140.dp)
+                .size(70.dp)
+                .background(color = Color.White)
+                .border(border = BorderStroke(2.dp, Color.Black))
+                .clickable(onClick = {
+                })
+        ) {
+            Text(text = "Keyboard", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }
+    }
+    //TOP LEFT
+    Column() {
+        Box(
+            modifier = Modifier
+                .offset(x_offset.dp-70.dp)
+                .size(70.dp)
+                .background(color = Color.White)
+                .border(border = BorderStroke(2.dp, Color.Black))
+                .clickable(onClick = {
+                })
+        ) {
+            Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }}
+    //MIDDLE LEFT
+    Column() {
+        Box(
+            modifier = Modifier
+                .offset(x_offset.dp-70.dp, 140.dp)
+                .size(70.dp)
+                .background(color = Color.White)
+                .border(border = BorderStroke(2.dp, Color.Black))
+                .clickable(onClick = {
+                })
+        ) {
+            Text(text = "Play", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }
+
+    }
+    //BOTTOM LEFT
+    Column() {
+        Box(
+            modifier = Modifier
+                .offset(x_offset.dp-70.dp, 70.dp)
+                .size(70.dp)
+                .background(color = Color.White)
+                .border(border = BorderStroke(2.dp, Color.Black))
+                .clickable(onClick = {
+                })
+        ) {
+            Text(text = "Stop", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }
+
+    }
+
+
 }
+
 
 @Composable
 fun Screen() {
-    Buttonsettings()
+    Buttonboxes()
 }
