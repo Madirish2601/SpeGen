@@ -503,14 +503,46 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
 }
 
 
+// Function that creates the static row of always accessible words at the bottom of the screen for easy access with for loop that allows for customization through variables
+@Composable
+fun Static_Row_Needs() {
+    val static_terms: MutableList<String> = mutableListOf("Yes", "No", "Food", "Water", "I need my parent", "I use a talker to communicate")
+    var text_color = Color.Black // Set as var to be able to be customized by user later
+    var text_alignment = Alignment.Center // Set as var to be able to be customized by user later
+    var box_color = Color.White // Set as var to be able to be customized by user later
+    var border_size = 2.dp // Set as var to be able to be customized by user later
+    var border_color = Color.Black // Set as var to be able to be customized by user later
+    var width = (screenWidth/static_terms.size.dp).dp // Determine width of boxes by dividing screen width by total number of boxes which is equal to number of needed terms
+    var height = (screenHeight/(70.dp/screenHeight).dp).dp // Fraction determined by base value of 70.dp then converted to fraction and applied to screen height to (hopefully) make box height scale with screen height
+    var y_offset = (screenHeight-height) // Determines Y offset by subtracting height from the total screen width
+    var x_offset = (0).dp // Determines X offset. Not needed since the first box starts at the left edge of the screen.
+    for (i in 0 until static_terms.size) // For loop to create modular number of boxes. Starts at zero due to X offset calculations and ends at the number of terms minus 1 since it starts at zero {
+        Column() {
+            Box(
+                // FIX Y OFFSET
+                modifier = Modifier
+                    .offset((x_offset+(width*i)), y_offset)
+                    .width(width)
+                    .height(height)
+                    .background(color = box_color)
+                    .border(border = BorderStroke(border_size, border_color))
+                    .clickable(onClick = {
+                    })
+            ) {
+                Text(text = static_terms[i], color = text_color, modifier = Modifier.align(text_alignment))
+            }
+        }
+}
+
 @Composable
 fun Buttonboxes() {
-    val x_offset = 1215
+    val x_offset = 1215.dp
+    val y_offset = 0.dp
     //TOP RIGHT
     Column() {
         Box(
             modifier = Modifier
-                .offset(x_offset.dp)
+                .offset(x_offset, y_offset)
                 .size(70.dp)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
@@ -524,7 +556,7 @@ fun Buttonboxes() {
     Column() {
         Box(
             modifier = Modifier
-                .offset(x_offset.dp, 70.dp)
+                .offset(x_offset, y_offset+70.dp)
                 .size(70.dp)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
@@ -538,7 +570,7 @@ fun Buttonboxes() {
     Column() {
         Box(
             modifier = Modifier
-                .offset(x_offset.dp, 140.dp)
+                .offset(x_offset, y_offset+140.dp)
                 .size(70.dp)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
@@ -552,7 +584,7 @@ fun Buttonboxes() {
     Column() {
         Box(
             modifier = Modifier
-                .offset(x_offset.dp-70.dp)
+                .offset(x_offset-70.dp)
                 .size(70.dp)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
@@ -565,7 +597,7 @@ fun Buttonboxes() {
     Column() {
         Box(
             modifier = Modifier
-                .offset(x_offset.dp-70.dp, 140.dp)
+                .offset(x_offset-70.dp, y_offset+140.dp)
                 .size(70.dp)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
@@ -580,7 +612,7 @@ fun Buttonboxes() {
     Column() {
         Box(
             modifier = Modifier
-                .offset(x_offset.dp-70.dp, 70.dp)
+                .offset(x_offset-70.dp, y_offset+70.dp)
                 .size(70.dp)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
@@ -598,5 +630,7 @@ fun Buttonboxes() {
 
 @Composable
 fun Screen() {
+    GetScreenDimensions()
+    Static_Row_Needs()
     Buttonboxes()
 }
