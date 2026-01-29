@@ -3,8 +3,10 @@ package com.example.spegen
 import android.content.res.Configuration
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.view.Menu
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +16,6 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -36,46 +37,26 @@ import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import coil3.request.ImageRequest
 import kotlin.math.floor
-import android.content.res.Resources
-import android.service.autofill.Validators.or
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import com.example.spegen.lazy_images_exceeding
+import androidx.compose.foundation.lazy.LazyRow
 import java.lang.Math.sqrt
-import java.security.KeyStore
 import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.math.max
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 
 
 // Text box text variable
@@ -138,13 +119,20 @@ var maxItems = display_images
 
 val paddingDividend = 50
 
+var static_row_height = 0.dp
+
+var button_boxes_width = 0.dp
+
+val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose"))
+
+var MenuList = listOf<menutemplate>(home)
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Surface(modifier = Modifier.fillMaxSize(), color = Color.White)
-            {
+            Surface(modifier = Modifier.fillMaxSize().background(Color.White)) {
                 Screen()
             }
         }
@@ -280,25 +268,6 @@ fun Loadimages(image_num: Int) {
 }
 
 @Composable
-fun TextSubmitButton() {
-    // Button that converts the value in the text box to TTS.
-    val tts = rememberTextToSpeech()
-    Column(modifier = Modifier
-        .offset(x = 260.dp, 0.dp)) {
-        Button(onClick = {
-            if (tts.value?.isSpeaking == true) {
-                tts.value?.stop()
-            } else tts.value?.speak(
-                text, TextToSpeech.QUEUE_FLUSH, null, ""
-            )
-        }
-        ) {
-            Text("Submit")
-        }
-    }
-}
-
-@Composable
 fun SymbolsButtonExec() {
     // Oversees calling to the OpenSymbols API by calling several sub-functions
     var image_num by remember { mutableIntStateOf(0) }
@@ -313,7 +282,7 @@ fun SymbolsButtonExec() {
             alternate = !alternate
             displayImages += 1
             getAccessToken()
-            useApiWithToken(accesstoken, text, image_int)
+            useApiWithToken(accesstoken, text)
         }
 
         image_names += name
@@ -428,7 +397,7 @@ suspend fun getAccessToken(): AccessTokenResponse? {
 }
 
 
-suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int) {
+suspend fun useApiWithToken(token: String?, search: String) {
     // Uses access token to get image data
 
     withContext(Dispatchers.IO) {
@@ -448,7 +417,7 @@ suspend fun useApiWithToken(token: String?, search: String, image_iteration: Int
                 println("API call failed: ${ex.message}")
             }
             is Result.Success -> {
-                var symbolstring = (result.get()).replace("[", "").replace("]", "").split("},")[image_iteration]
+                var symbolstring = (result.get()).replace("[", "").replace("]", "").split("},")[0]
                 if (symbolstring.length > 1) {
                     symbolstring += "}"
                 }
@@ -513,8 +482,8 @@ fun Static_Row_Needs() {
     var border_size = 2.dp // Set as var to be able to be customized by user later
     var border_color = Color.Black // Set as var to be able to be customized by user later
     var width = (screenWidth/static_terms.size.dp).dp // Determine width of boxes by dividing screen width by total number of boxes which is equal to number of needed terms
-    var height = (screenHeight.value*((70.dp/screenHeight).dp).value).dp // Fraction determined by base value of 70.dp then converted to fraction and applied to screen height to (hopefully) make box height scale with screen height
-    var y_offset = (screenHeight-height) // Determines Y offset by subtracting height from the total screen width
+    static_row_height = (screenHeight.value*((70.dp/screenHeight).dp).value).dp // Fraction determined by base value of 70.dp then converted to fraction and applied to screen height to (hopefully) make box height scale with screen height
+    var y_offset = (screenHeight-static_row_height) // Determines Y offset by subtracting height from the total screen width
     var x_offset = (0).dp // Determines X offset. Not needed since the first box starts at the left edge of the screen.
     for (i in 0 until static_terms.size) // For loop to create modular number of boxes. Starts at zero due to X offset calculations and ends at the number of terms minus 1 since it starts at zero
         Column() {
@@ -525,7 +494,7 @@ fun Static_Row_Needs() {
                 modifier = Modifier
                     .offset((x_offset+(width*i)), y_offset)
                     .width(width)
-                    .height(height)
+                    .height(static_row_height)
                     .background(color = box_color)
                     .border(border = BorderStroke(border_size, border_color))
                     .clickable(onClick = {
@@ -542,15 +511,119 @@ fun Static_Row_Needs() {
 }
 
 @Composable
+fun Symbol(Name: String, URL: String) {
+    val tts = rememberTextToSpeech()
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(image_url)
+            .build(),
+        "Picture of $Name",
+        modifier = Modifier
+            .background(Color.White)
+            .padding(20.dp)
+            .scale(1f)
+            .size(100.dp)
+            .clickable(onClick = {
+                if (tts.value?.isSpeaking == true) {
+                    tts.value?.stop()
+                } else tts.value?.speak(
+                    (Name), TextToSpeech.QUEUE_FLUSH, null, ""
+                )
+            })
+    )
+}
+
+@Composable
+fun Folder(Name: String, URL: String, LinkedMenu: Int) {
+    var clicked = 0
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(image_url)
+            .build(),
+        "Picture of $name",
+        modifier = Modifier
+            .background(Color.White)
+            .padding(20.dp)
+            .scale(1f)
+            .size(100.dp)
+            .clickable(onClick = {
+                clicked = 1
+            })
+    )
+    if (clicked == 1) {
+        MenuParser(MenuFinder(LinkedMenu))
+    }
+}
+
+data class menutemplate(
+    val id: Int,
+    val title: String,
+    val parentId: Int?,
+    val folders: List<String>,
+    val pointers: List<Int>,
+    val symbols: List<String>
+)
+
+fun MenuFinder(menu_id: Int): menutemplate {
+    for (i in 0..MenuList.size) {
+        if (MenuList[i].id == menu_id) {
+            return MenuList[i]
+        }
+    }
+    return home
+}
+
+@Composable
+fun MenuParser(menutemplate: menutemplate) {
+    var i = 0
+    var j = 0
+    runBlocking {
+        getAccessToken()
+    }
+    LazyRow() {
+        items(menutemplate.folders.size) { item ->
+            runBlocking {
+                useApiWithToken(accesstoken, menutemplate.folders[i])
+            }
+            Folder(name, image_url, menutemplate.pointers[i])
+            i += 1
+        }
+        items(menutemplate.symbols.size) { item ->
+            runBlocking {
+                useApiWithToken(accesstoken, menutemplate.symbols[j])
+            }
+            Symbol(name, image_url)
+            j += 1
+        }
+    }
+}
+
+@Composable
+fun Menu() {
+    Column(
+        modifier = Modifier.alpha(1f)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(screenWidth - (button_boxes_width * 2))
+                .height(screenHeight - static_row_height)
+        ) {
+            MenuParser(MenuFinder(1))
+        }
+    }
+}
+
+@Composable
 fun Buttonboxes() {
-    val x_offset = 1215.dp
+    val x_offset = 1210.dp
     val y_offset = 0.dp
+    button_boxes_width = 70.dp
     //TOP RIGHT
     Column() {
         Box(
             modifier = Modifier
                 .offset(x_offset, y_offset)
-                .size(70.dp)
+                .size(button_boxes_width)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
@@ -564,7 +637,7 @@ fun Buttonboxes() {
         Box(
             modifier = Modifier
                 .offset(x_offset, y_offset+70.dp)
-                .size(70.dp)
+                .size(button_boxes_width)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
@@ -578,7 +651,7 @@ fun Buttonboxes() {
         Box(
             modifier = Modifier
                 .offset(x_offset, y_offset+140.dp)
-                .size(70.dp)
+                .size(button_boxes_width)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
@@ -592,7 +665,7 @@ fun Buttonboxes() {
         Box(
             modifier = Modifier
                 .offset(x_offset-70.dp)
-                .size(70.dp)
+                .size(button_boxes_width)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
@@ -605,7 +678,7 @@ fun Buttonboxes() {
         Box(
             modifier = Modifier
                 .offset(x_offset-70.dp, y_offset+140.dp)
-                .size(70.dp)
+                .size(button_boxes_width)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
@@ -620,7 +693,7 @@ fun Buttonboxes() {
         Box(
             modifier = Modifier
                 .offset(x_offset-70.dp, y_offset+70.dp)
-                .size(70.dp)
+                .size(button_boxes_width)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
@@ -630,9 +703,8 @@ fun Buttonboxes() {
         }
 
     }
-
-
 }
+
 
 
 @Composable
@@ -640,4 +712,5 @@ fun Screen() {
     GetScreenDimensions()
     Static_Row_Needs()
     Buttonboxes()
+    Menu()
 }
