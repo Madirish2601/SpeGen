@@ -1,5 +1,6 @@
 package com.example.spegen
 
+import android.R.attr.clickable
 import android.content.res.Configuration
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -609,6 +610,25 @@ fun Menu() {
                 .height(screenHeight - static_row_height)
         ) {
             MenuParser(MenuFinder(1))
+        }
+    }
+}
+
+// Could add two options for back button, column at the bottom of the screen or back button box at the top right of the screen
+
+@Composable
+fun MenuRow() {
+    val menu_terms: MutableList<String> = mutableListOf("Home", "Temp", "Temp2", "Temp3", "Temp4", "Temp5")
+    Column() {
+        for (i in 1..menu_terms.size) {
+            Box(
+                modifier = Modifier
+                    .offset(0.dp, 570.dp)
+                    .width(100.dp)
+                    .height(50.dp)
+                    .background(color = Color.White)
+                    .border(border = BorderStroke(100.dp, Color.Black))
+            )
         }
     }
 }
