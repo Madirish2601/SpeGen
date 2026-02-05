@@ -150,176 +150,6 @@ fun GetScreenDimensions() {
     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
-
-@Composable
-fun GridDisplay() {
-    if (((sqrt(display_images.toDouble())) % 1) == 0.0 ) {
-        maxItems = sqrt(display_images.toDouble()).toInt()
-    }
-    else {
-        var closestPair: Pair<Int, Int>? = null
-        var minDifference = Int.MAX_VALUE
-        for (i in 2..sqrt(display_images.toDouble()).toInt()) {
-            if (display_images % i == 0) {
-                val factor1 = i
-                val factor2 = display_images / i
-
-                // Exclude the case where factor1 or factor2 is the number itself (e.g., for primes)
-                if (factor1 == display_images || factor2 == display_images) {
-                    continue
-                }
-
-                val currentDifference = abs(factor1 - factor2)
-
-                if (currentDifference < minDifference) {
-                    minDifference = currentDifference
-                    closestPair = Pair(factor1, factor2)
-                }
-            }
-
-            if (isLandscape) {
-                maxItems = closestPair?.second ?: maxItems
-            } else {
-                maxItems = closestPair?.first ?: maxItems
-            }
-        }
-    }
-    maxItems+=1
-    FlowRow(
-            maxItemsInEachRow = maxItems,
-            modifier = Modifier.fillMaxWidth().fillMaxHeight().offset(
-                x = (abs(
-                    (floor(
-                        ((screenWidth) / 100).toString().substringBefore(".").toInt().toDouble()
-                    ) * 100)
-                ) * -1).dp+((abs(
-                    (floor(
-                        ((screenWidth) / 100).toString().substringBefore(".").toInt().toDouble()
-                    ) * 100)))*0.13.dp), y = 70.dp
-            ),
-        ) {
-            var image_display_number = 0
-            image_number = 0
-            image_names.forEach { item ->
-                Loadimages(image_display_number)
-                image_display_number += 1
-                image_number += 1
-            }
-        }
-}
-
-@Composable
-fun Loadimages(image_num: Int) {
-    // Displays images and controls their position and size. If no images are found it will display an image not found (See drawables in resource folder)
-    if (empty) {
-        if (!isLandscape) {
-            Image(
-                painter = painterResource(id = R.drawable.image_not_found_error),
-                modifier = Modifier
-                    .requiredSize(
-                        width = (1.27226463104 * screenWidth),
-                        height = (1.17508813161 * screenHeight)
-                    )
-                    .offset(
-                        x = (-(0.63613231552 * screenWidth)),
-                        y = (0.02350176263 * screenHeight)
-                    ),
-                contentDescription = "Image not found",
-            )
-        }
-
-        else {
-            Image(
-                painter = painterResource(id = R.drawable.image_not_found_error),
-                modifier = Modifier
-                    .requiredSize(
-                        width = (1.27226463104 * screenWidth),
-                        height = (0.8 * screenHeight)
-                    )
-                    .offset(
-                        x = (-(0.2 * screenWidth)),
-                        y = (0.02350176263 * screenHeight)
-                    ),
-                contentDescription = "Image not found"
-            )
-        }
-    }
-
-    else {
-        println((((screenWidth-((maxItems)*(screenWidth/paddingDividend)))).toString().substringBefore(".").toInt().toDouble()/(maxItems-1)).dp-(screenWidth/paddingDividend))
-        val tts = rememberTextToSpeech()
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(image_urls[image_number])
-                .build(),
-            "Picture of ${image_names[image_num]}",
-            modifier = Modifier
-                .padding(screenWidth / paddingDividend)
-                .width((((screenWidth-((maxItems)*(screenWidth/paddingDividend)))).toString().substringBefore(".").toInt().toDouble()/(maxItems-1)).dp-(screenWidth/paddingDividend))
-                .aspectRatio((screenHeight/(screenWidth.toString().substringBefore(".").toInt().toDouble()+(((abs((floor(((screenWidth) / 100).toString().substringBefore(".").toInt().toDouble()) * 100)))))).dp))
-                .clickable(onClick = {
-                    if (tts.value?.isSpeaking == true) {
-                        tts.value?.stop()
-                    } else tts.value?.speak(
-                        (image_names[image_num]), TextToSpeech.QUEUE_FLUSH, null, ""
-                    )
-                })
-        )
-    }
-}
-
-@Composable
-fun SymbolsButtonExec() {
-    // Oversees calling to the OpenSymbols API by calling several sub-functions
-    var image_num by remember { mutableIntStateOf(0) }
-    var image_int by remember { mutableIntStateOf(0) }
-    image_names.clear()
-    image_urls.clear()
-    for (i in 1..display_images) {
-        image_num = i
-        image_int = i - 1
-        var displayImages by remember { mutableIntStateOf(1) }
-        runBlocking {
-            alternate = !alternate
-            displayImages += 1
-            getAccessToken()
-            useApiWithToken(accesstoken, text)
-        }
-
-        image_names += name
-
-        image_urls += image_url
-
-        if (empty) {
-            Loadimages(0)
-            return
-        }
-    }
-    GridDisplay()
-}
-
-@Composable
-fun OpenSymbolsButton() {
-    // Button that will execute SymbolsButtonExec; used for initiating interaction with OpenSymbols API
-    var displayImages by remember { mutableIntStateOf(1) }
-    Column(modifier = Modifier
-        .offset(x = 50.dp, y = 0.dp)) {
-        Button(onClick = {
-            displayImages += 1
-            alternate_button = !alternate_button
-        }) {
-            Text("Search")
-        }
-        if (displayImages > 1 && alternate_button) {
-            SymbolsButtonExec()
-        }
-
-        if (displayImages > 1 && !alternate_button) {
-            SymbolsButtonExec()
-        }
-    }
-}
-
 @Composable
 fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
     // Handles TTS and its properties
@@ -512,7 +342,7 @@ fun Static_Row_Needs() {
 }
 
 @Composable
-fun Symbol(Name: String, URL: String) {
+fun Symbol(Name: String) {
     val tts = rememberTextToSpeech()
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
@@ -535,7 +365,7 @@ fun Symbol(Name: String, URL: String) {
 }
 
 @Composable
-fun Folder(Name: String, URL: String, LinkedMenu: Int) {
+fun Folder(LinkedMenu: Int) {
     var clicked = 0
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
@@ -586,14 +416,14 @@ fun MenuParser(menutemplate: menutemplate) {
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.folders[i])
             }
-            Folder(name, image_url, menutemplate.pointers[i])
+            Folder(menutemplate.pointers[i])
             i += 1
         }
         items(menutemplate.symbols.size) { item ->
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.symbols[j])
             }
-            Symbol(name, image_url)
+            Symbol(name)
             j += 1
         }
     }
@@ -620,7 +450,6 @@ fun Menu() {
 fun MenuRow() {
     val menu_terms: MutableList<String> = mutableListOf("Home", "Temp", "Temp2", "Temp3", "Temp4", "Temp5")
     var text_color = Color.Black // Set as var to be able to be customized by user later
-    var text_alignment = Alignment.Center // Set as var to be able to be customized by user later
     var box_color = Color.White // Set as var to be able to be customized by user later
     var border_size = 2.dp // Set as var to be able to be customized by user later
     var border_color = Color.Black // Set as var to be able to be customized by user later
