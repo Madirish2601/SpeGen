@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.style.TextAlign
 
 
 // Text box text variable
@@ -343,46 +344,65 @@ fun Static_Row_Needs() {
 
 @Composable
 fun Symbol(Name: String) {
+    val name = Name.replaceFirstChar {
+        if (it.isLowerCase())
+            it.titlecase()
+        else it.toString() }
     val tts = rememberTextToSpeech()
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(image_url)
-            .build(),
-        "Picture of $Name",
-        modifier = Modifier
-            .background(Color.White)
-            .padding(20.dp)
-            .scale(1f)
-            .size(100.dp)
-            .clickable(onClick = {
-                if (tts.value?.isSpeaking == true) {
-                    tts.value?.stop()
-                } else tts.value?.speak(
-                    (Name), TextToSpeech.QUEUE_FLUSH, null, ""
-                )
-            })
-    )
+    var height_dp = 16
+    var width_dp = height_dp*3.0625
+    Box {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(image_url)
+                .build(),
+            "Picture of $Name",
+            modifier = Modifier
+                .background(Color.White)
+                .padding(20.dp)
+                .scale(1f)
+                .size(100.dp)
+                .clickable(onClick = {
+                    if (tts.value?.isSpeaking == true) {
+                        tts.value?.stop()
+                    } else tts.value?.speak(
+                        (name), TextToSpeech.QUEUE_FLUSH, null, ""
+                    )
+                })
+        )
+        Text(text = name, color = Color.Black, modifier = Modifier.padding(1.dp).height(height_dp.dp).width(width_dp.dp).align(Alignment.BottomCenter), textAlign = TextAlign.Center)
+    }
 }
 
 @Composable
-fun Folder(LinkedMenu: Int) {
+fun Folder(Name: String, LinkedMenu: Int) {
+    val name = Name.replaceFirstChar {
+        if (it.isLowerCase())
+            it.titlecase()
+        else it.toString() }
     var clicked = 0
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(image_url)
-            .build(),
-        "Picture of $name",
-        modifier = Modifier
-            .background(Color.White)
-            .padding(20.dp)
-            .scale(1f)
-            .size(100.dp)
-            .clickable(onClick = {
-                clicked = 1
-            })
-    )
+    var height_dp = 16
+    var width_dp = height_dp*3.0625
+    Box {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(image_url)
+                .build(),
+            "Picture of $name",
+            modifier = Modifier
+                .background(Color.White)
+                .padding(20.dp)
+                .scale(1f)
+                .size(100.dp)
+                .clickable(onClick = {
+                    clicked = 1
+                })
+        )
+        Text(text = name, color = Color.Black, modifier = Modifier.padding(1.dp).height(height_dp.dp).width(width_dp.dp).align(Alignment.BottomCenter), textAlign = TextAlign.Center)
+    }
     if (clicked == 1) {
         MenuParser(MenuFinder(LinkedMenu))
+        clicked = 0
     }
 }
 
@@ -416,7 +436,7 @@ fun MenuParser(menutemplate: menutemplate) {
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.folders[i])
             }
-            Folder(menutemplate.pointers[i])
+            Folder(name, menutemplate.pointers[i])
             i += 1
         }
         items(menutemplate.symbols.size) { item ->
