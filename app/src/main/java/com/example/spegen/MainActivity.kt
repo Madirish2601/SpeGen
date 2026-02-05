@@ -619,18 +619,37 @@ fun Menu() {
 @Composable
 fun MenuRow() {
     val menu_terms: MutableList<String> = mutableListOf("Home", "Temp", "Temp2", "Temp3", "Temp4", "Temp5")
-    Column() {
-        for (i in 1..menu_terms.size) {
+    var text_color = Color.Black // Set as var to be able to be customized by user later
+    var text_alignment = Alignment.Center // Set as var to be able to be customized by user later
+    var box_color = Color.White // Set as var to be able to be customized by user later
+    var border_size = 2.dp // Set as var to be able to be customized by user later
+    var border_color = Color.Black // Set as var to be able to be customized by user later
+    var width = (screenWidth/menu_terms.size.dp).dp // Determine width of boxes by dividing screen width by total number of boxes which is equal to number of needed terms
+    static_row_height = (screenHeight.value*((70.dp/screenHeight).dp).value).dp // Fraction determined by base value of 70.dp then converted to fraction and applied to screen height to (hopefully) make box height scale with screen height
+    var y_offset = (screenHeight-static_row_height-static_row_height) // Determines Y offset by subtracting height from the total screen width
+    var x_offset = (0).dp // Determines X offset. Not needed since the first box starts at the left edge of the screen.
+    for (i in 0 until menu_terms.size) // For loop to create modular number of boxes. Starts at zero due to X offset calculations and ends at the number of terms minus 1 since it starts at zero
+        Column() {
+            val tts = rememberTextToSpeech()
             Box(
+                // FIX Y OFFSET
                 modifier = Modifier
-                    .offset(0.dp, 570.dp)
-                    .width(100.dp)
-                    .height(50.dp)
-                    .background(color = Color.White)
-                    .border(border = BorderStroke(100.dp, Color.Black))
-            )
+                    .offset((x_offset+(width*i)), y_offset)
+                    .width(width)
+                    .height(static_row_height)
+                    .background(color = box_color)
+                    .border(border = BorderStroke(border_size, border_color))
+                    .clickable(onClick = {
+                        println("DO STUFF")
+                    })
+                ) {
+                Text(
+                    text = menu_terms[i],
+                    color = text_color,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
         }
-    }
 }
 
 @Composable
@@ -732,5 +751,6 @@ fun Screen() {
     GetScreenDimensions()
     Static_Row_Needs()
     Buttonboxes()
+    MenuRow()
     Menu()
 }
