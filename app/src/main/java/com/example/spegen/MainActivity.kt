@@ -125,9 +125,11 @@ var static_row_height = 0.dp
 
 var button_boxes_width = 0.dp
 
-val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose"))
+val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose", "little", "big", "we", "food", "water"))
 
 var MenuList = listOf<menutemplate>(home)
+
+var box_size = 0.dp
 
 
 class MainActivity : ComponentActivity() {
@@ -350,7 +352,12 @@ fun Symbol(Name: String) {
         else it.toString() }
     val tts = rememberTextToSpeech()
     var height_dp = 16
-    var width_dp = height_dp*3.0625
+    var text_width_mult = 3.0625
+    var width_dp = height_dp*text_width_mult
+    var padding = 20.dp
+    var text_padding = 1.dp
+    var size = 100.dp
+    box_size = size+padding+height_dp.dp+text_padding+text_width_mult.dp
     Box {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -359,9 +366,9 @@ fun Symbol(Name: String) {
             "Picture of $Name",
             modifier = Modifier
                 .background(Color.White)
-                .padding(20.dp)
+                .padding(padding)
                 .scale(1f)
-                .size(100.dp)
+                .size(size)
                 .clickable(onClick = {
                     if (tts.value?.isSpeaking == true) {
                         tts.value?.stop()
@@ -370,7 +377,7 @@ fun Symbol(Name: String) {
                     )
                 })
         )
-        Text(text = name, color = Color.Black, modifier = Modifier.padding(1.dp).height(height_dp.dp).width(width_dp.dp).align(Alignment.BottomCenter), textAlign = TextAlign.Center)
+        Text(text = name, color = Color.Black, modifier = Modifier.padding(text_padding).height(height_dp.dp).width(width_dp.dp).align(Alignment.BottomCenter), textAlign = TextAlign.Center)
     }
 }
 
@@ -383,6 +390,8 @@ fun Folder(Name: String, LinkedMenu: Int) {
     var clicked = 0
     var height_dp = 16
     var width_dp = height_dp*3.0625
+    var padding = 20.dp
+    var size = 100.dp
     Box {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -391,9 +400,9 @@ fun Folder(Name: String, LinkedMenu: Int) {
             "Picture of $name",
             modifier = Modifier
                 .background(Color.White)
-                .padding(20.dp)
+                .padding(padding)
                 .scale(1f)
-                .size(100.dp)
+                .size(size)
                 .clickable(onClick = {
                     clicked = 1
                 })
@@ -431,19 +440,23 @@ fun MenuParser(menutemplate: menutemplate) {
     runBlocking {
         getAccessToken()
     }
-    LazyRow() {
-        items(menutemplate.folders.size) { item ->
+    FlowRow() {
+        menutemplate.folders.forEach { _ ->
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.folders[i])
             }
-            Folder(name, menutemplate.pointers[i])
+            Box(Modifier.weight(1f)) {
+                Folder(name, menutemplate.pointers[i])
+            }
             i += 1
         }
-        items(menutemplate.symbols.size) { item ->
+        menutemplate.symbols.forEach { _ ->
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.symbols[j])
             }
-            Symbol(name)
+            Box(Modifier.weight(1f)) {
+                Symbol(name)
+            }
             j += 1
         }
     }
@@ -457,7 +470,7 @@ fun Menu() {
         Column(
             modifier = Modifier
                 .width(screenWidth - (button_boxes_width * 2))
-                .height(screenHeight - static_row_height)
+                .height(screenHeight - (static_row_height*2))
         ) {
             MenuParser(MenuFinder(1))
         }
