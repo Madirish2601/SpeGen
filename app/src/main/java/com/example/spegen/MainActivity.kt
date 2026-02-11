@@ -44,6 +44,7 @@ import kotlin.math.floor
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.aspectRatio
@@ -125,9 +126,15 @@ var static_row_height = 0.dp
 
 var button_boxes_width = 0.dp
 
-val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose"))
+val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose", "1", "2", "3", "4", "5", "6", "shidfuhosd"))
 
-var MenuList = listOf<menutemplate>(home)
+val my = menutemplate(2, "My", 1, listOf("I"), listOf(3), listOf("i", "me", "mine", "eye", "1", "2", "10", "4", "5", "6", "1938"))
+
+var MenuList = listOf<menutemplate>(home, my)
+
+var box_size = 100.dp
+
+var box_padding = 20.dp
 
 
 class MainActivity : ComponentActivity() {
@@ -359,9 +366,9 @@ fun Symbol(Name: String) {
             "Picture of $Name",
             modifier = Modifier
                 .background(Color.White)
-                .padding(20.dp)
+                .padding(box_padding)
                 .scale(1f)
-                .size(100.dp)
+                .size(box_size)
                 .clickable(onClick = {
                     if (tts.value?.isSpeaking == true) {
                         tts.value?.stop()
@@ -380,10 +387,10 @@ fun Folder(Name: String, LinkedMenu: Int) {
         if (it.isLowerCase())
             it.titlecase()
         else it.toString() }
-    var clicked = 0
     var height_dp = 16
     var width_dp = height_dp*3.0625
-    Box {
+    var switchmenu = false
+    Box() {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(image_url)
@@ -391,18 +398,24 @@ fun Folder(Name: String, LinkedMenu: Int) {
             "Picture of $name",
             modifier = Modifier
                 .background(Color.White)
-                .padding(20.dp)
+                .padding(box_padding)
                 .scale(1f)
-                .size(100.dp)
+                .size(box_size)
                 .clickable(onClick = {
-                    clicked = 1
+                    switchmenu = !switchmenu
                 })
         )
-        Text(text = name, color = Color.Black, modifier = Modifier.padding(1.dp).height(height_dp.dp).width(width_dp.dp).align(Alignment.BottomCenter), textAlign = TextAlign.Center)
-    }
-    if (clicked == 1) {
-        MenuParser(MenuFinder(LinkedMenu))
-        clicked = 0
+        Text(
+            text = name,
+            color = Color.Black,
+            modifier = Modifier.padding(1.dp).height(height_dp.dp).width(width_dp.dp)
+                .align(Alignment.BottomCenter),
+            textAlign = TextAlign.Center
+        )
+        if (switchmenu) {
+            println("RAN")
+            MenuParser(MenuFinder(LinkedMenu))
+        }
     }
 }
 
@@ -426,25 +439,32 @@ fun MenuFinder(menu_id: Int): menutemplate {
 
 @Composable
 fun MenuParser(menutemplate: menutemplate) {
-    var i = 0
-    var j = 0
+    var totalitems = ((screenWidth - (button_boxes_width * 2))/(box_size + (box_padding*2)))*((screenHeight-(static_row_height*2))/box_size)
     runBlocking {
         getAccessToken()
     }
-    LazyRow() {
-        items(menutemplate.folders.size) { item ->
+    FlowRow(modifier = Modifier.fillMaxWidth().fillMaxHeight(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.SpaceBetween) {
+        var itemsdisplayed = 0
+        for (i in 0 until menutemplate.folders.size) {
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.folders[i])
             }
             Folder(name, menutemplate.pointers[i])
-            i += 1
+            itemsdisplayed += 1
         }
-        items(menutemplate.symbols.size) { item ->
+        for (i in 0 until menutemplate.symbols.size) {
             runBlocking {
-                useApiWithToken(accesstoken, menutemplate.symbols[j])
+                useApiWithToken(accesstoken, menutemplate.symbols[i])
             }
             Symbol(name)
-            j += 1
+            itemsdisplayed += 1
+        }
+        for (i in 0 until totalitems.toInt()-(itemsdisplayed)) {
+            Box(modifier = Modifier
+            .background(Color.White)
+            .padding(box_padding)
+            .scale(1f)
+            .size(box_size))
         }
     }
 }
@@ -457,7 +477,7 @@ fun Menu() {
         Column(
             modifier = Modifier
                 .width(screenWidth - (button_boxes_width * 2))
-                .height(screenHeight - static_row_height)
+                .height(screenHeight - static_row_height - static_row_height)
         ) {
             MenuParser(MenuFinder(1))
         }
@@ -499,6 +519,10 @@ fun MenuRow() {
                 )
             }
         }
+}
+
+// Could make an image override function that lets the user use their own images in place of the default ones
+fun ImageOverride() {
 }
 
 @Composable
@@ -589,7 +613,6 @@ fun Buttonboxes() {
         ) {
             Text(text = "Stop", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }
-
     }
 }
 
