@@ -1,28 +1,20 @@
 package com.example.spegen
 
-import android.R.attr.clickable
 import android.content.res.Configuration
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import android.view.Menu
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
 import coil3.compose.AsyncImage
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.gson.responseObject
@@ -40,20 +32,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import coil3.request.ImageRequest
-import kotlin.math.floor
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import java.lang.Math.sqrt
-import kotlin.math.abs
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
@@ -113,8 +100,6 @@ var isLandscape = false
 var image_names = mutableListOf("")
 
 var image_urls = mutableListOf("")
-
-var lazy_images_exceeding = false
 
 var image_number = 0
 
@@ -389,7 +374,8 @@ fun Folder(Name: String, LinkedMenu: Int) {
         else it.toString() }
     var height_dp = 16
     var width_dp = height_dp*3.0625
-    var switchmenu = false
+    var switchmenu by remember { mutableStateOf(false) }
+    var switchmenu1 by remember { mutableStateOf(false) }
     Box() {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -402,7 +388,13 @@ fun Folder(Name: String, LinkedMenu: Int) {
                 .scale(1f)
                 .size(box_size)
                 .clickable(onClick = {
-                    switchmenu = !switchmenu
+                    if (switchmenu == false) {
+                        switchmenu = !switchmenu
+                    }
+                    else {
+                        switchmenu = !switchmenu
+                        switchmenu1 = !switchmenu1
+                    }
                 })
         )
         Text(
@@ -412,8 +404,7 @@ fun Folder(Name: String, LinkedMenu: Int) {
                 .align(Alignment.BottomCenter),
             textAlign = TextAlign.Center
         )
-        if (switchmenu) {
-            println("RAN")
+        if (switchmenu or switchmenu1) {
             MenuParser(MenuFinder(LinkedMenu))
         }
     }
@@ -428,8 +419,11 @@ data class menutemplate(
     val symbols: List<String>
 )
 
-fun MenuFinder(menu_id: Int): menutemplate {
-    for (i in 0..MenuList.size) {
+fun MenuFinder(menu_id: Int?): menutemplate {
+    if (menu_id !is Int) {
+        return home
+    }
+    for (i in 0 until MenuList.size) {
         if (MenuList[i].id == menu_id) {
             return MenuList[i]
         }
@@ -438,26 +432,30 @@ fun MenuFinder(menu_id: Int): menutemplate {
 }
 
 @Composable
-fun MenuParser(menutemplate: menutemplate) {
+fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
     var totalitems = ((screenWidth - (button_boxes_width * 2))/(box_size + (box_padding*2)))*((screenHeight-(static_row_height*2))/box_size)
     runBlocking {
         getAccessToken()
     }
-    FlowRow(modifier = Modifier.fillMaxWidth().fillMaxHeight(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.SpaceBetween) {
+    FlowRow(modifier = modifier.fillMaxWidth().fillMaxHeight(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.SpaceBetween) {
         var itemsdisplayed = 0
         for (i in 0 until menutemplate.folders.size) {
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.folders[i])
             }
-            Folder(name, menutemplate.pointers[i])
-            itemsdisplayed += 1
+            if (id != 0) {
+                Folder(name, menutemplate.pointers[i])
+                itemsdisplayed += 1
+            }
         }
         for (i in 0 until menutemplate.symbols.size) {
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.symbols[i])
             }
-            Symbol(name)
-            itemsdisplayed += 1
+            if (id != 0) {
+                Symbol(name)
+                itemsdisplayed += 1
+            }
         }
         for (i in 0 until totalitems.toInt()-(itemsdisplayed)) {
             Box(modifier = Modifier
@@ -489,6 +487,7 @@ fun Menu() {
 @Composable
 fun MenuRow() {
     val menu_terms: MutableList<String> = mutableListOf("Home", "Temp", "Temp2", "Temp3", "Temp4", "Temp5")
+    val linked_menus: MutableList<Int?> = mutableListOf(0,null,null,null,null,null)
     var text_color = Color.Black // Set as var to be able to be customized by user later
     var box_color = Color.White // Set as var to be able to be customized by user later
     var border_size = 2.dp // Set as var to be able to be customized by user later
@@ -497,6 +496,8 @@ fun MenuRow() {
     static_row_height = (screenHeight.value*((70.dp/screenHeight).dp).value).dp // Fraction determined by base value of 70.dp then converted to fraction and applied to screen height to (hopefully) make box height scale with screen height
     var y_offset = (screenHeight-static_row_height-static_row_height) // Determines Y offset by subtracting height from the total screen width
     var x_offset = (0).dp // Determines X offset. Not needed since the first box starts at the left edge of the screen.
+    var switchmenu by remember { mutableStateOf(false) }
+    var switchmenu1 by remember { mutableStateOf(false) }
     for (i in 0 until menu_terms.size) // For loop to create modular number of boxes. Starts at zero due to X offset calculations and ends at the number of terms minus 1 since it starts at zero
         Column() {
             val tts = rememberTextToSpeech()
@@ -509,7 +510,13 @@ fun MenuRow() {
                     .background(color = box_color)
                     .border(border = BorderStroke(border_size, border_color))
                     .clickable(onClick = {
-                        println("DO STUFF")
+                        if (switchmenu == false) {
+                            switchmenu = !switchmenu
+                        }
+                        else {
+                            switchmenu = !switchmenu
+                            switchmenu1 = !switchmenu1
+                        }
                     })
                 ) {
                 Text(
@@ -517,6 +524,9 @@ fun MenuRow() {
                     color = text_color,
                     modifier = Modifier.align(Alignment.Center)
                 )
+            }
+            if (switchmenu or switchmenu1) {
+                MenuParser(MenuFinder(linked_menus[i]), Modifier.offset(0.dp,-150.dp))
             }
         }
 }
