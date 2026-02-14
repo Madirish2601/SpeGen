@@ -37,6 +37,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -46,7 +47,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.FlowRowScope
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.times
+import kotlin.math.roundToInt
 
 
 // Text box text variable
@@ -120,6 +128,10 @@ var MenuList = listOf<menutemplate>(home, my)
 var box_size = 100.dp
 
 var box_padding = 20.dp
+
+var menu_height = (screenHeight - static_row_height - static_row_height - static_row_height - static_row_height)
+
+var menu_width = screenWidth - (button_boxes_width * 2)
 
 
 class MainActivity : ComponentActivity() {
@@ -335,7 +347,7 @@ fun Static_Row_Needs() {
 }
 
 @Composable
-fun Symbol(Name: String) {
+fun Symbol(Name: String, Vertical_Stretch: Dp) {
     val name = Name.replaceFirstChar {
         if (it.isLowerCase())
             it.titlecase()
@@ -350,10 +362,11 @@ fun Symbol(Name: String) {
                 .build(),
             "Picture of $Name",
             modifier = Modifier
+                .height(box_size+Vertical_Stretch+(box_padding*3))
                 .background(Color.White)
                 .padding(box_padding)
                 .scale(1f)
-                .size(box_size)
+                .width(box_size)
                 .clickable(onClick = {
                     if (tts.value?.isSpeaking == true) {
                         tts.value?.stop()
@@ -367,7 +380,7 @@ fun Symbol(Name: String) {
 }
 
 @Composable
-fun Folder(Name: String, LinkedMenu: Int) {
+fun Folder(Name: String, LinkedMenu: Int, Vertical_Stretch: Dp) {
     val name = Name.replaceFirstChar {
         if (it.isLowerCase())
             it.titlecase()
@@ -383,15 +396,15 @@ fun Folder(Name: String, LinkedMenu: Int) {
                 .build(),
             "Picture of $name",
             modifier = Modifier
+                .height(box_size+Vertical_Stretch+(box_padding*3))
                 .background(Color.White)
                 .padding(box_padding)
                 .scale(1f)
-                .size(box_size)
+                .width(box_size)
                 .clickable(onClick = {
                     if (switchmenu == false) {
                         switchmenu = !switchmenu
-                    }
-                    else {
+                    } else {
                         switchmenu = !switchmenu
                         switchmenu1 = !switchmenu1
                     }
@@ -434,17 +447,19 @@ fun MenuFinder(menu_id: Int?): menutemplate {
 @Composable
 fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
     var totalitems = ((screenWidth - (button_boxes_width * 2))/(box_size + (box_padding*2)))*((screenHeight-(static_row_height*2))/box_size)
+    var total_box_size = box_size+(box_padding*2)
+    val vertical_stretch = ((menu_height)-((((menu_height)/(total_box_size)).toInt())*total_box_size))
     runBlocking {
         getAccessToken()
     }
-    FlowRow(modifier = modifier.fillMaxWidth().fillMaxHeight(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.SpaceBetween) {
+    FlowRow(modifier = modifier.fillMaxWidth().fillMaxHeight(), horizontalArrangement = Arrangement.SpaceBetween) {
         var itemsdisplayed = 0
         for (i in 0 until menutemplate.folders.size) {
             runBlocking {
                 useApiWithToken(accesstoken, menutemplate.folders[i])
             }
             if (id != 0) {
-                Folder(name, menutemplate.pointers[i])
+                Folder(name, menutemplate.pointers[i], vertical_stretch)
                 itemsdisplayed += 1
             }
         }
@@ -453,7 +468,7 @@ fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
                 useApiWithToken(accesstoken, menutemplate.symbols[i])
             }
             if (id != 0) {
-                Symbol(name)
+                Symbol(name, vertical_stretch)
                 itemsdisplayed += 1
             }
         }
@@ -462,20 +477,24 @@ fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
             .background(Color.White)
             .padding(box_padding)
             .scale(1f)
-            .size(box_size))
+            .height(box_size+(box_padding*2)+vertical_stretch)
+            .width(box_size))
         }
     }
 }
 
 @Composable
 fun Menu() {
+    menu_height = (screenHeight - static_row_height - static_row_height - static_row_height - static_row_height)
+    menu_width = screenWidth - (button_boxes_width * 2)
     Column(
         modifier = Modifier.alpha(1f)
     ) {
         Column(
             modifier = Modifier
-                .width(screenWidth - (button_boxes_width * 2))
-                .height(screenHeight - static_row_height - static_row_height)
+                .width(menu_width)
+                .height(menu_height)
+                .offset(x = 0.dp, y = (static_row_height*2))
         ) {
             MenuParser(MenuFinder(1))
         }
