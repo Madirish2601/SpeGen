@@ -52,6 +52,9 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
 import kotlin.math.roundToInt
@@ -119,9 +122,9 @@ var static_row_height = 0.dp
 
 var button_boxes_width = 0.dp
 
-val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose", "1", "2", "3", "4", "5", "6", "shidfuhosd"))
+val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose", "1", "2", "3", "4", "5", "6", "shidfuhosd"), listOf(0,0,0,0,0,0,0,0,0,0,0))
 
-val my = menutemplate(2, "My", 1, listOf("I"), listOf(3), listOf("i", "me", "mine", "eye", "1", "2", "10", "4", "5", "6", "1938"))
+val my = menutemplate(2, "My", 1, listOf("I"), listOf(3), listOf("i", "me", "mine", "eye", "1", "2", "10", "4", "5", "6", "1938"), listOf(0,0,0,0,0,0,0,0,0,0,0))
 
 var MenuList = listOf<menutemplate>(home, my)
 
@@ -132,6 +135,8 @@ var box_padding = 20.dp
 var menu_height = (screenHeight - static_row_height - static_row_height - static_row_height - static_row_height)
 
 var menu_width = screenWidth - (button_boxes_width * 2)
+
+var selected_symbols = mutableListOf<String>()
 
 
 class MainActivity : ComponentActivity() {
@@ -347,7 +352,45 @@ fun Static_Row_Needs() {
 }
 
 @Composable
-fun Symbol(Name: String, Vertical_Stretch: Dp) {
+fun InputBox() {
+    LazyRow() {
+        items(selected_symbols.size) { item ->
+            runBlocking {
+                useApiWithToken(accesstoken, selected_symbols[item])
+            }
+            InputBox_Symbol(name)
+            }
+        }
+}
+
+
+@Composable
+fun InputBox_Symbol(Name: String) {
+    val name = Name.replaceFirstChar {
+        if (it.isLowerCase())
+            it.titlecase()
+        else it.toString() }
+    var height_dp = 16
+    var width_dp = height_dp*3.0625
+    Box {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(image_url)
+                .build(),
+            "Picture of $Name",
+            modifier = Modifier
+                .background(Color.White)
+                .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
+                .padding(box_padding)
+                .scale(1f)
+                .size(box_size)
+        )
+        Text(text = name, color = Color.Black, modifier = Modifier.padding(1.dp).height(height_dp.dp).width(width_dp.dp).align(Alignment.BottomCenter), textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+fun Symbol(Name: String, Vertical_Stretch: Dp, tts_type: Int) {
     val name = Name.replaceFirstChar {
         if (it.isLowerCase())
             it.titlecase()
@@ -364,15 +407,29 @@ fun Symbol(Name: String, Vertical_Stretch: Dp) {
             modifier = Modifier
                 .height(box_size+Vertical_Stretch+(box_padding*3))
                 .background(Color.White)
+                .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
                 .padding(box_padding)
                 .scale(1f)
                 .width(box_size)
                 .clickable(onClick = {
-                    if (tts.value?.isSpeaking == true) {
-                        tts.value?.stop()
-                    } else tts.value?.speak(
-                        (name), TextToSpeech.QUEUE_FLUSH, null, ""
-                    )
+                    if (tts_type == 0) {
+                        if (tts.value?.isSpeaking == true) {
+                            tts.value?.stop()
+                        } else tts.value?.speak(
+                            (name), TextToSpeech.QUEUE_FLUSH, null, ""
+                        )
+                    }
+                    if (tts_type == 1) {
+                        selected_symbols += name
+                    }
+                    if (tts_type == 2) {
+                        if (tts.value?.isSpeaking == true) {
+                            tts.value?.stop()
+                        } else tts.value?.speak(
+                            (name), TextToSpeech.QUEUE_FLUSH, null, ""
+                        )
+                        selected_symbols += name
+                    }
                 })
         )
         Text(text = name, color = Color.Black, modifier = Modifier.padding(1.dp).height(height_dp.dp).width(width_dp.dp).align(Alignment.BottomCenter), textAlign = TextAlign.Center)
@@ -398,6 +455,7 @@ fun Folder(Name: String, LinkedMenu: Int, Vertical_Stretch: Dp) {
             modifier = Modifier
                 .height(box_size+Vertical_Stretch+(box_padding*3))
                 .background(Color.White)
+                .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
                 .padding(box_padding)
                 .scale(1f)
                 .width(box_size)
@@ -424,12 +482,13 @@ fun Folder(Name: String, LinkedMenu: Int, Vertical_Stretch: Dp) {
 }
 
 data class menutemplate(
-    val id: Int,
-    val title: String,
-    val parentId: Int?,
-    val folders: List<String>,
-    val pointers: List<Int>,
-    val symbols: List<String>
+    val id: Int, // ID of the current menu
+    val title: String, // Title of the current menu
+    val parentId: Int?, // ID of the parent menu
+    val folders: List<String>, // List of folder names to be used with the API function useAPIWithToken
+    val pointers: List<Int>, // Pointers to be used in MenuFinder to find the corresponding menu for a folder to link to
+    val symbols: List<String>, // List of symbol names to be used with the API function useAPIWithToken
+    val tts: List<Int> // 0 is for appending to the input box without instantly playing, 1 is for instantly playing in tts engine without appending to input box, 2 is for both appending to text box and playing in tts engine instantly
 )
 
 fun MenuFinder(menu_id: Int?): menutemplate {
@@ -468,16 +527,17 @@ fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
                 useApiWithToken(accesstoken, menutemplate.symbols[i])
             }
             if (id != 0) {
-                Symbol(name, vertical_stretch)
+                Symbol(name, vertical_stretch, menutemplate.tts[i])
                 itemsdisplayed += 1
             }
         }
         for (i in 0 until totalitems.toInt()-(itemsdisplayed)) {
             Box(modifier = Modifier
             .background(Color.White)
+            .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
             .padding(box_padding)
             .scale(1f)
-            .height(box_size+(box_padding*2)+vertical_stretch)
+            .height(box_size+vertical_stretch+box_padding)
             .width(box_size))
         }
     }
@@ -500,8 +560,6 @@ fun Menu() {
         }
     }
 }
-
-// Could add two options for back button, column at the bottom of the screen or back button box at the top right of the screen
 
 @Composable
 fun MenuRow() {
@@ -653,5 +711,6 @@ fun Screen() {
     Static_Row_Needs()
     Buttonboxes()
     MenuRow()
+    InputBox()
     Menu()
 }
