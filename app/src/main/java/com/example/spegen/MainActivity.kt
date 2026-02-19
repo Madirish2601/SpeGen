@@ -1,10 +1,12 @@
 package com.example.spegen
 
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -122,9 +124,9 @@ var static_row_height = 0.dp
 
 var button_boxes_width = 0.dp
 
-val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose", "1", "2", "3", "4", "5", "6", "shidfuhosd"), listOf(0,0,0,0,0,0,0,0,0,0,0))
+val home = menutemplate(1, "Menu", 1, listOf("My"), listOf(2), listOf("i", "see", "dog", "moose", "1", "2", "3", "4", "5", "6", "shidfuhosd"), listOf(1,1,1,1,1,1,1,1,1,1,1))
 
-val my = menutemplate(2, "My", 1, listOf("I"), listOf(3), listOf("i", "me", "mine", "eye", "1", "2", "10", "4", "5", "6", "1938"), listOf(0,0,0,0,0,0,0,0,0,0,0))
+val my = menutemplate(2, "My", 1, listOf("I"), listOf(3), listOf("i", "me", "mine", "eye", "1", "2", "10", "4", "5", "6", "1938"), listOf(1,1,1,1,1,1,1,1,1,1,1))
 
 var MenuList = listOf<menutemplate>(home, my)
 
@@ -136,8 +138,9 @@ var menu_height = (screenHeight - static_row_height - static_row_height - static
 
 var menu_width = screenWidth - (button_boxes_width * 2)
 
-var selected_symbols = mutableListOf<String>()
+var selected_symbols = mutableStateListOf<String>()
 
+var tts: MutableState<TextToSpeech?> = mutableStateOf(null)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -164,7 +167,6 @@ fun GetScreenDimensions() {
 fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
     // Handles TTS and its properties
     val context = LocalContext.current
-    val tts = remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -329,7 +331,6 @@ fun Static_Row_Needs() {
     for (i in 0 until static_terms.size) // For loop to create modular number of boxes. Starts at zero due to X offset calculations and ends at the number of terms minus 1 since it starts at zero
         Column() {
             val text = static_terms[i]
-            val tts = rememberTextToSpeech()
             Box(
                 // FIX Y OFFSET
                 modifier = Modifier
@@ -353,14 +354,30 @@ fun Static_Row_Needs() {
 
 @Composable
 fun InputBox() {
-    LazyRow() {
-        items(selected_symbols.size) { item ->
-            runBlocking {
-                useApiWithToken(accesstoken, selected_symbols[item])
-            }
-            InputBox_Symbol(name)
+    Row {
+        LazyRow(
+            modifier = Modifier.width(screenWidth - (button_boxes_width * 2))
+                .height(button_boxes_width * 2)
+                .background(Color.White)
+                .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(0.dp))
+                .clickable(onClick = {
+                    var speech = selected_symbols.joinToString(separator = " ")
+                    if (tts.value?.isSpeaking == true) {
+                        tts.value?.stop()
+                    } else tts.value?.speak(
+                        speech, TextToSpeech.QUEUE_FLUSH, null, ""
+                    )
+                }
+                )
+        ) {
+            items(selected_symbols.size) { item ->
+                runBlocking {
+                    useApiWithToken(accesstoken, selected_symbols[item])
+                }
+                InputBox_Symbol(name)
             }
         }
+    }
 }
 
 
@@ -380,7 +397,6 @@ fun InputBox_Symbol(Name: String) {
             "Picture of $Name",
             modifier = Modifier
                 .background(Color.White)
-                .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
                 .padding(box_padding)
                 .scale(1f)
                 .size(box_size)
@@ -395,9 +411,10 @@ fun Symbol(Name: String, Vertical_Stretch: Dp, tts_type: Int) {
         if (it.isLowerCase())
             it.titlecase()
         else it.toString() }
-    val tts = rememberTextToSpeech()
     var height_dp = 16
     var width_dp = height_dp*3.0625
+    var switchmenu by remember { mutableStateOf(false) }
+    var switchmenu1 by remember { mutableStateOf(false) }
     Box {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -429,6 +446,12 @@ fun Symbol(Name: String, Vertical_Stretch: Dp, tts_type: Int) {
                             (name), TextToSpeech.QUEUE_FLUSH, null, ""
                         )
                         selected_symbols += name
+                    }
+                    if (switchmenu == false) {
+                        switchmenu = !switchmenu
+                    } else {
+                        switchmenu = !switchmenu
+                        switchmenu1 = !switchmenu1
                     }
                 })
         )
@@ -577,7 +600,6 @@ fun MenuRow() {
     var switchmenu1 by remember { mutableStateOf(false) }
     for (i in 0 until menu_terms.size) // For loop to create modular number of boxes. Starts at zero due to X offset calculations and ends at the number of terms minus 1 since it starts at zero
         Column() {
-            val tts = rememberTextToSpeech()
             Box(
                 // FIX Y OFFSET
                 modifier = Modifier
@@ -642,7 +664,7 @@ fun Buttonboxes() {
                 .clickable(onClick = {
                 })
         ) {
-            Text(text = "Delete", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }
     }
     //BOTTOM RIGHT
@@ -654,9 +676,12 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
+                    if (tts.value?.isSpeaking == true) {
+                        tts.value?.stop()
+                    }
                 })
         ) {
-            Text(text = "Keyboard", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            Text(text = "Stop", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }
     }
     //TOP LEFT
@@ -670,7 +695,7 @@ fun Buttonboxes() {
                 .clickable(onClick = {
                 })
         ) {
-            Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            Text(text = "Keyboard", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }}
     //MIDDLE LEFT
     Column() {
@@ -681,9 +706,10 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
+                    selected_symbols.clear()
                 })
         ) {
-            Text(text = "Play", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            Text(text = "Clear", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }
 
     }
@@ -696,9 +722,10 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
+                    selected_symbols.removeAt(selected_symbols.lastIndex)
                 })
         ) {
-            Text(text = "Stop", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            Text(text = "Delete", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }
     }
 }
@@ -707,6 +734,7 @@ fun Buttonboxes() {
 
 @Composable
 fun Screen() {
+    tts = rememberTextToSpeech()
     GetScreenDimensions()
     Static_Row_Needs()
     Buttonboxes()
