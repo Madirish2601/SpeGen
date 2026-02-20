@@ -57,8 +57,11 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextField
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
+import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
 
 
@@ -141,6 +144,9 @@ var menu_width = screenWidth - (button_boxes_width * 2)
 var selected_symbols = mutableStateListOf<String>()
 
 var tts: MutableState<TextToSpeech?> = mutableStateOf(null)
+
+var wordfinder_display = false
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -635,10 +641,28 @@ fun ImageOverride() {
 }
 
 @Composable
+fun WordFinder() {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black).zIndex(1f)) {
+        var text by remember { mutableStateOf("") }
+        TextField(
+            value = text,
+            onValueChange = { newText ->
+                text = newText
+                com.example.spegen.text = text
+            },
+            label = { Text("Image Search") },
+            modifier = Modifier.offset(200.dp)
+        )
+    }
+}
+
+@Composable
 fun Buttonboxes() {
     val x_offset = 1210.dp
     val y_offset = 0.dp
     button_boxes_width = 70.dp
+    var switchmenu by remember { mutableStateOf(false) }
+    var switchmenu1 by remember { mutableStateOf(false) }
     //TOP RIGHT
     Column() {
         Box(
@@ -662,9 +686,21 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
-                })
+                    wordfinder_display = true
+                    if (switchmenu == false) {
+                        switchmenu = !switchmenu
+                    }
+                    else {
+                        switchmenu = !switchmenu
+                        switchmenu1 = !switchmenu1
+                }})
         ) {
             Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }
+        if (switchmenu or switchmenu1) {
+            Box() {
+                WordFinder()
+            }
         }
     }
     //BOTTOM RIGHT
@@ -722,7 +758,9 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
-                    selected_symbols.removeAt(selected_symbols.lastIndex)
+                    if (selected_symbols.size >= 1) {
+                        selected_symbols.removeAt(selected_symbols.lastIndex)
+                    }
                 })
         ) {
             Text(text = "Delete", color = Color.Black, modifier = Modifier.align(Alignment.Center))
@@ -734,11 +772,12 @@ fun Buttonboxes() {
 
 @Composable
 fun Screen() {
-    tts = rememberTextToSpeech()
+    Buttonboxes()
     GetScreenDimensions()
     Static_Row_Needs()
-    Buttonboxes()
-    MenuRow()
-    InputBox()
-    Menu()
+    if (!wordfinder_display) {
+        MenuRow()
+        InputBox()
+        Menu()
+    }
 }
