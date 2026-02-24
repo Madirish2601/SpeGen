@@ -63,6 +63,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.MutableLiveData
 
 
 // Text box text variable
@@ -145,7 +148,7 @@ var selected_symbols = mutableStateListOf<String>()
 
 var tts: MutableState<TextToSpeech?> = mutableStateOf(null)
 
-var wordfinder_display = false
+var wordfinder_display: MutableLiveData<Boolean> = MutableLiveData(false)
 
 
 class MainActivity : ComponentActivity() {
@@ -360,6 +363,7 @@ fun Static_Row_Needs() {
 
 @Composable
 fun InputBox() {
+    tts = rememberTextToSpeech()
     Row {
         LazyRow(
             modifier = Modifier.width(screenWidth - (button_boxes_width * 2))
@@ -642,6 +646,8 @@ fun ImageOverride() {
 
 @Composable
 fun WordFinder() {
+    wordfinder_display.value = true
+    println(wordfinder_display)
     Box(modifier = Modifier.fillMaxSize().background(Color.Black).zIndex(1f)) {
         var text by remember { mutableStateOf("") }
         TextField(
@@ -686,7 +692,6 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
-                    wordfinder_display = true
                     if (switchmenu == false) {
                         switchmenu = !switchmenu
                     }
@@ -772,12 +777,15 @@ fun Buttonboxes() {
 
 @Composable
 fun Screen() {
+    tts = rememberTextToSpeech()
     Buttonboxes()
     GetScreenDimensions()
     Static_Row_Needs()
-    if (!wordfinder_display) {
-        MenuRow()
-        InputBox()
-        Menu()
+    wordfinder_display.value?.let {
+        if (!it) {
+            MenuRow()
+            InputBox()
+            Menu()
+        }
     }
 }
