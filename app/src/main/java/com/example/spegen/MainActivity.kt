@@ -148,7 +148,7 @@ var selected_symbols = mutableStateListOf<String>()
 
 var tts: MutableState<TextToSpeech?> = mutableStateOf(null)
 
-var wordfinder_display: MutableLiveData<Boolean> = MutableLiveData(false)
+var wordfinder_display = mutableIntStateOf(0)
 
 
 class MainActivity : ComponentActivity() {
@@ -646,8 +646,8 @@ fun ImageOverride() {
 
 @Composable
 fun WordFinder() {
-    wordfinder_display.value = true
-    println(wordfinder_display)
+    val a = remember {mutableIntStateOf(1)}
+    wordfinder_display.value = a.value
     Box(modifier = Modifier.fillMaxSize().background(Color.Black).zIndex(1f)) {
         var text by remember { mutableStateOf("") }
         TextField(
@@ -778,14 +778,15 @@ fun Buttonboxes() {
 @Composable
 fun Screen() {
     tts = rememberTextToSpeech()
+    val a = remember {mutableIntStateOf(0)}
     Buttonboxes()
     GetScreenDimensions()
     Static_Row_Needs()
-    wordfinder_display.value?.let {
-        if (!it) {
-            MenuRow()
-            InputBox()
-            Menu()
-        }
+    println(wordfinder_display)
+    println(a)
+    if (wordfinder_display.value == a.value) {
+        MenuRow()
+        InputBox()
+        Menu()
     }
 }
