@@ -186,7 +186,6 @@ fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
 
         onDispose {
             textToSpeech.stop()
-            textToSpeech.shutdown()
         }
     }
     return tts
@@ -327,6 +326,7 @@ suspend fun useApiWithToken(token: String?, search: String) {
 // Function that creates the static row of always accessible words at the bottom of the screen for easy access with for loop that allows for customization through variables
 @Composable
 fun Static_Row_Needs() {
+    tts = rememberTextToSpeech()
     val static_terms: MutableList<String> = mutableListOf("Yes", "No", "Food", "Water", "I need my parent", "I use a talker to communicate")
     var text_color = Color.Black // Set as var to be able to be customized by user later
     var text_alignment = Alignment.Center // Set as var to be able to be customized by user later
@@ -417,6 +417,7 @@ fun InputBox_Symbol(Name: String) {
 
 @Composable
 fun Symbol(Name: String, Vertical_Stretch: Dp, tts_type: Int) {
+    tts = rememberTextToSpeech()
     val name = Name.replaceFirstChar {
         if (it.isLowerCase())
             it.titlecase()
@@ -648,7 +649,8 @@ fun ImageOverride() {
 fun WordFinder() {
     val a = remember {mutableIntStateOf(1)}
     wordfinder_display.value = a.value
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black).zIndex(1f)) {
+    Box(modifier = Modifier.offset(0.dp, -button_boxes_width).fillMaxSize().background(Color.Blue)) {
+        Box(modifier = Modifier.border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp)).height((screenHeight.value*(0.8)).dp).width((screenWidth.value*0.8).dp).background(Color.White).offset(x = -((screenHeight.value*0.1).dp), y = -((screenWidth.value*0.1).dp)))
         var text by remember { mutableStateOf("") }
         TextField(
             value = text,
@@ -664,11 +666,13 @@ fun WordFinder() {
 
 @Composable
 fun Buttonboxes() {
+    val a = remember {mutableIntStateOf(0)}
     val x_offset = 1210.dp
     val y_offset = 0.dp
     button_boxes_width = 70.dp
     var switchmenu by remember { mutableStateOf(false) }
     var switchmenu1 by remember { mutableStateOf(false) }
+    if (wordfinder_display.value == a.value) {
     //TOP RIGHT
     Column() {
         Box(
@@ -681,31 +685,6 @@ fun Buttonboxes() {
                 })
         ) {
             Text(text = "Settings", color = Color.Black, modifier = Modifier.align(Alignment.Center))
-        }
-    }
-    //MIDDLE RIGHT
-    Column() {
-        Box(
-            modifier = Modifier
-                .offset(x_offset, y_offset+70.dp)
-                .size(button_boxes_width)
-                .background(color = Color.White)
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .clickable(onClick = {
-                    if (switchmenu == false) {
-                        switchmenu = !switchmenu
-                    }
-                    else {
-                        switchmenu = !switchmenu
-                        switchmenu1 = !switchmenu1
-                }})
-        ) {
-            Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
-        }
-        if (switchmenu or switchmenu1) {
-            Box() {
-                WordFinder()
-            }
         }
     }
     //BOTTOM RIGHT
@@ -758,7 +737,7 @@ fun Buttonboxes() {
     Column() {
         Box(
             modifier = Modifier
-                .offset(x_offset-70.dp, y_offset+70.dp)
+                .offset(x_offset - 70.dp, y_offset + 70.dp)
                 .size(button_boxes_width)
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
@@ -769,6 +748,33 @@ fun Buttonboxes() {
                 })
         ) {
             Text(text = "Delete", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }
+    }
+    }
+    //MIDDLE RIGHT
+    Column() {
+        Box(
+            modifier = Modifier
+                .offset(x_offset, y_offset+70.dp)
+                .size(button_boxes_width)
+                .background(color = Color.White)
+                .border(border = BorderStroke(2.dp, Color.Black))
+                .clickable(onClick = {
+                    if (wordfinder_display.value == a.value) {
+                        if (switchmenu == false) {
+                            switchmenu = !switchmenu
+                        } else {
+                            switchmenu = !switchmenu
+                            switchmenu1 = !switchmenu1
+                        }
+                    }})
+        ) {
+            Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        }
+        if (switchmenu or switchmenu1) {
+            Box() {
+                WordFinder()
+            }
         }
     }
 }
@@ -782,8 +788,6 @@ fun Screen() {
     Buttonboxes()
     GetScreenDimensions()
     Static_Row_Needs()
-    println(wordfinder_display)
-    println(a)
     if (wordfinder_display.value == a.value) {
         MenuRow()
         InputBox()
