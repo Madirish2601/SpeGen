@@ -65,6 +65,8 @@ import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.fromColorLong
 import androidx.lifecycle.MutableLiveData
 
 
@@ -648,19 +650,27 @@ fun ImageOverride() {
 @Composable
 fun WordFinder() {
     val a = remember {mutableIntStateOf(1)}
-    wordfinder_display.value = a.value
-    Box(modifier = Modifier.offset(0.dp, -button_boxes_width).fillMaxSize().background(Color.White).alpha(0f).offset(x = ((screenWidth.value*0.1).dp), y = (((screenHeight.value*0.1).dp)))) {
-        Box(modifier = Modifier.border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp)).height((screenHeight.value*(0.8)).dp).width((screenWidth.value*0.8).dp).background(Color.White))
-        var text by remember { mutableStateOf("") }
-        TextField(
-            value = text,
-            onValueChange = { newText ->
-                text = newText
-                com.example.spegen.text = text
-            },
-            label = { Text("Image Search") },
-            modifier = Modifier.offset(200.dp)
-        )
+    wordfinder_display.value = a.intValue
+    Box(modifier = Modifier.fillMaxSize().background(Color(red = 230, green = 227, blue = 227, alpha = 100))) {
+        Box(
+            modifier = Modifier
+                .offset(x = (screenWidth.value*0.1).dp, y = ((screenHeight.value - static_row_height.value)*0.1).dp)
+                .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
+                .clip(RoundedCornerShape(40.dp))
+                .height(((screenHeight.value - static_row_height.value) * (0.8)).dp)
+                .width((screenWidth.value * 0.8).dp).background(Color.White)
+        ) {
+            var text by remember { mutableStateOf("") }
+            TextField(
+                value = text,
+                onValueChange = { newText ->
+                    text = newText
+                    com.example.spegen.text = text
+                },
+                label = { Text("Image Search") },
+                modifier = Modifier.offset((((screenWidth.value * 0.8).dp/2)-(screenWidth.value*0.1).dp), y = 20.dp)
+            )
+        }
     }
 }
 
@@ -761,21 +771,10 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
-                    if (wordfinder_display.value == a.value) {
-                        if (switchmenu == false) {
-                            switchmenu = !switchmenu
-                        } else {
-                            switchmenu = !switchmenu
-                            switchmenu1 = !switchmenu1
-                        }
-                    }})
+                    wordfinder_display.value = 1
+                    })
         ) {
             Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
-        }
-        if (switchmenu or switchmenu1) {
-            Box() {
-                WordFinder()
-            }
         }
     }
 }
@@ -788,11 +787,8 @@ fun Screen() {
     val a = remember {mutableIntStateOf(0)}
     GetScreenDimensions()
     Static_Row_Needs()
-    if (wordfinder_display.value != a.value) {
-        Buttonboxes()
-        MenuRow(Modifier.alpha(0.2f))
-        InputBox(Modifier.alpha(0.2f))
-        Menu(Modifier.alpha(0.2f))
+    if (wordfinder_display.intValue != a.intValue) {
+        WordFinder()
     }
     else {
         Buttonboxes()
