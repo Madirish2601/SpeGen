@@ -567,12 +567,12 @@ fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
         }
         for (i in 0 until totalitems.toInt()-(itemsdisplayed)) {
             Box(modifier = Modifier
-            .background(Color.White)
-            .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
-            .padding(box_padding)
-            .scale(1f)
-            .height(box_size+vertical_stretch+box_padding)
-            .width(box_size))
+                .background(Color.White)
+                .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
+                .padding(box_padding)
+                .scale(1f)
+                .height(box_size+vertical_stretch+box_padding)
+                .width(box_size))
         }
     }
 }
@@ -628,7 +628,7 @@ fun MenuRow(modifier: Modifier) {
                             switchmenu1 = !switchmenu1
                         }
                     })
-                ) {
+            ) {
                 Text(
                     text = menu_terms[i],
                     color = text_color,
@@ -667,89 +667,90 @@ fun WordFinder() {
 @Composable
 fun Buttonboxes() {
     val a = remember {mutableIntStateOf(0)}
-    val x_offset = (((screenWidth - (button_boxes_width * 2)).value)+button_boxes_width.value).dp
+    println(button_boxes_width)
+    val x_offset = ((screenWidth - button_boxes_width - 70.dp).value).dp
     val y_offset = 0.dp
     button_boxes_width = 70.dp
     var switchmenu by remember { mutableStateOf(false) }
     var switchmenu1 by remember { mutableStateOf(false) }
     if (wordfinder_display.value == a.value) {
-    //TOP RIGHT
-    Column() {
-        Box(
-            modifier = Modifier
-                .offset(x_offset, y_offset)
-                .size(button_boxes_width)
-                .background(color = Color.White)
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .clickable(onClick = {
-                })
-        ) {
-            Text(text = "Settings", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        //TOP RIGHT
+        Column() {
+            Box(
+                modifier = Modifier
+                    .offset(x_offset, y_offset)
+                    .size(button_boxes_width)
+                    .background(color = Color.White)
+                    .border(border = BorderStroke(2.dp, Color.Black))
+                    .clickable(onClick = {
+                    })
+            ) {
+                Text(text = "Settings", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            }
         }
-    }
-    //BOTTOM RIGHT
-    Column() {
-        Box(
-            modifier = Modifier
-                .offset(x_offset, y_offset+140.dp)
-                .size(button_boxes_width)
-                .background(color = Color.White)
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .clickable(onClick = {
-                    if (tts.value?.isSpeaking == true) {
-                        tts.value?.stop()
-                    }
-                })
-        ) {
-            Text(text = "Stop", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+        //BOTTOM RIGHT
+        Column() {
+            Box(
+                modifier = Modifier
+                    .offset(x_offset, y_offset+140.dp)
+                    .size(button_boxes_width)
+                    .background(color = Color.White)
+                    .border(border = BorderStroke(2.dp, Color.Black))
+                    .clickable(onClick = {
+                        if (tts.value?.isSpeaking == true) {
+                            tts.value?.stop()
+                        }
+                    })
+            ) {
+                Text(text = "Stop", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            }
         }
-    }
-    //TOP LEFT
-    Column() {
-        Box(
-            modifier = Modifier
-                .offset(x_offset-70.dp)
-                .size(button_boxes_width)
-                .background(color = Color.White)
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .clickable(onClick = {
-                })
-        ) {
-            Text(text = "Keyboard", color = Color.Black, modifier = Modifier.align(Alignment.Center))
-        }}
-    //MIDDLE LEFT
-    Column() {
-        Box(
-            modifier = Modifier
-                .offset(x_offset-70.dp, y_offset+140.dp)
-                .size(button_boxes_width)
-                .background(color = Color.White)
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .clickable(onClick = {
-                    selected_symbols.clear()
-                })
-        ) {
-            Text(text = "Clear", color = Color.Black, modifier = Modifier.align(Alignment.Center))
-        }
+        //TOP LEFT
+        Column() {
+            Box(
+                modifier = Modifier
+                    .offset(x_offset-70.dp)
+                    .size(button_boxes_width)
+                    .background(color = Color.White)
+                    .border(border = BorderStroke(2.dp, Color.Black))
+                    .clickable(onClick = {
+                    })
+            ) {
+                Text(text = "Keyboard", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            }}
+        //MIDDLE LEFT
+        Column() {
+            Box(
+                modifier = Modifier
+                    .offset(x_offset-70.dp, y_offset+140.dp)
+                    .size(button_boxes_width)
+                    .background(color = Color.White)
+                    .border(border = BorderStroke(2.dp, Color.Black))
+                    .clickable(onClick = {
+                        selected_symbols.clear()
+                    })
+            ) {
+                Text(text = "Clear", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            }
 
-    }
-    //BOTTOM LEFT
-    Column() {
-        Box(
-            modifier = Modifier
-                .offset(x_offset - 70.dp, y_offset + 70.dp)
-                .size(button_boxes_width)
-                .background(color = Color.White)
-                .border(border = BorderStroke(2.dp, Color.Black))
-                .clickable(onClick = {
-                    if (selected_symbols.size >= 1) {
-                        selected_symbols.removeAt(selected_symbols.lastIndex)
-                    }
-                })
-        ) {
-            Text(text = "Delete", color = Color.Black, modifier = Modifier.align(Alignment.Center))
         }
-    }
+        //BOTTOM LEFT
+        Column() {
+            Box(
+                modifier = Modifier
+                    .offset(x_offset - 70.dp, y_offset + 70.dp)
+                    .size(button_boxes_width)
+                    .background(color = Color.White)
+                    .border(border = BorderStroke(2.dp, Color.Black))
+                    .clickable(onClick = {
+                        if (selected_symbols.size >= 1) {
+                            selected_symbols.removeAt(selected_symbols.lastIndex)
+                        }
+                    })
+            ) {
+                Text(text = "Delete", color = Color.Black, modifier = Modifier.align(Alignment.Center))
+            }
+        }
     }
     //MIDDLE RIGHT
     Column() {
@@ -785,15 +786,16 @@ fun Buttonboxes() {
 fun Screen() {
     tts = rememberTextToSpeech()
     val a = remember {mutableIntStateOf(0)}
-    Buttonboxes()
     GetScreenDimensions()
     Static_Row_Needs()
     if (wordfinder_display.value != a.value) {
+        Buttonboxes()
         MenuRow(Modifier.alpha(0.2f))
         InputBox(Modifier.alpha(0.2f))
         Menu(Modifier.alpha(0.2f))
     }
     else {
+        Buttonboxes()
         MenuRow(Modifier)
         InputBox(Modifier)
         Menu(Modifier)
