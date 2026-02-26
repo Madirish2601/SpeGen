@@ -362,11 +362,11 @@ fun Static_Row_Needs() {
 }
 
 @Composable
-fun InputBox() {
+fun InputBox(modifier: Modifier) {
     tts = rememberTextToSpeech()
     Row {
         LazyRow(
-            modifier = Modifier.width(screenWidth - (button_boxes_width * 2))
+            modifier = modifier.width(screenWidth - (button_boxes_width * 2))
                 .height(button_boxes_width * 2)
                 .background(Color.White)
                 .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(0.dp))
@@ -578,14 +578,14 @@ fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Menu() {
+fun Menu(modifier: Modifier) {
     menu_height = (screenHeight - static_row_height - static_row_height - static_row_height - static_row_height)
     menu_width = screenWidth - (button_boxes_width * 2)
     Column(
         modifier = Modifier.alpha(1f)
     ) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .width(menu_width)
                 .height(menu_height)
                 .offset(x = 0.dp, y = (static_row_height*2))
@@ -596,7 +596,7 @@ fun Menu() {
 }
 
 @Composable
-fun MenuRow() {
+fun MenuRow(modifier: Modifier) {
     val menu_terms: MutableList<String> = mutableListOf("Home", "Temp", "Temp2", "Temp3", "Temp4", "Temp5")
     val linked_menus: MutableList<Int?> = mutableListOf(0,null,null,null,null,null)
     var text_color = Color.Black // Set as var to be able to be customized by user later
@@ -613,7 +613,7 @@ fun MenuRow() {
         Column() {
             Box(
                 // FIX Y OFFSET
-                modifier = Modifier
+                modifier = modifier
                     .offset((x_offset+(width*i)), y_offset)
                     .width(width)
                     .height(static_row_height)
@@ -649,8 +649,8 @@ fun ImageOverride() {
 fun WordFinder() {
     val a = remember {mutableIntStateOf(1)}
     wordfinder_display.value = a.value
-    Box(modifier = Modifier.offset(0.dp, -button_boxes_width).fillMaxSize().background(Color.Blue)) {
-        Box(modifier = Modifier.border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp)).height((screenHeight.value*(0.8)).dp).width((screenWidth.value*0.8).dp).background(Color.White).offset(x = -((screenHeight.value*0.1).dp), y = -((screenWidth.value*0.1).dp)))
+    Box(modifier = Modifier.offset(0.dp, -button_boxes_width).fillMaxSize().background(Color.White).alpha(0f).offset(x = ((screenWidth.value*0.1).dp), y = (((screenHeight.value*0.1).dp)))) {
+        Box(modifier = Modifier.border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp)).height((screenHeight.value*(0.8)).dp).width((screenWidth.value*0.8).dp).background(Color.White))
         var text by remember { mutableStateOf("") }
         TextField(
             value = text,
@@ -667,7 +667,7 @@ fun WordFinder() {
 @Composable
 fun Buttonboxes() {
     val a = remember {mutableIntStateOf(0)}
-    val x_offset = 1210.dp
+    val x_offset = (((screenWidth - (button_boxes_width * 2)).value)+button_boxes_width.value).dp
     val y_offset = 0.dp
     button_boxes_width = 70.dp
     var switchmenu by remember { mutableStateOf(false) }
@@ -788,9 +788,14 @@ fun Screen() {
     Buttonboxes()
     GetScreenDimensions()
     Static_Row_Needs()
-    if (wordfinder_display.value == a.value) {
-        MenuRow()
-        InputBox()
-        Menu()
+    if (wordfinder_display.value != a.value) {
+        MenuRow(Modifier.alpha(0.2f))
+        InputBox(Modifier.alpha(0.2f))
+        Menu(Modifier.alpha(0.2f))
+    }
+    else {
+        MenuRow(Modifier)
+        InputBox(Modifier)
+        Menu(Modifier)
     }
 }
