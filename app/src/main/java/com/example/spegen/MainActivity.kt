@@ -44,7 +44,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
@@ -55,9 +54,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.TextField
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
@@ -68,6 +69,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.fromColorLong
 import androidx.lifecycle.MutableLiveData
+import kotlin.math.absoluteValue
 
 
 // Text box text variable
@@ -157,9 +159,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Surface(modifier = Modifier.fillMaxSize().background(Color.White)) {
-                Screen()
-            }
+            Screen()
         }
     }
 }
@@ -184,6 +184,7 @@ fun rememberTextToSpeech(): MutableState<TextToSpeech?> {
                 tts.value?.language = Locale.US
             }
         }
+
         tts.value = textToSpeech
 
         onDispose {
@@ -650,7 +651,7 @@ fun ImageOverride() {
 @Composable
 fun WordFinder() {
     val a = remember {mutableIntStateOf(1)}
-    wordfinder_display.value = a.intValue
+    var search_row_display = remember {mutableIntStateOf(0)}
     Box(modifier = Modifier.fillMaxSize().background(Color(red = 230, green = 227, blue = 227, alpha = 100))) {
         Box(
             modifier = Modifier
@@ -659,17 +660,34 @@ fun WordFinder() {
                 .clip(RoundedCornerShape(40.dp))
                 .height(((screenHeight.value - static_row_height.value) * (0.8)).dp)
                 .width((screenWidth.value * 0.8).dp).background(Color.White)
+                .padding(vertical = 20.dp)
         ) {
             var text by remember { mutableStateOf("") }
             TextField(
+                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
                 value = text,
                 onValueChange = { newText ->
                     text = newText
-                    com.example.spegen.text = text
                 },
                 label = { Text("Image Search") },
-                modifier = Modifier.offset((((screenWidth.value * 0.8).dp/2)-(screenWidth.value*0.1).dp), y = 20.dp)
+                modifier = Modifier.offset((((screenWidth.value * 0.8).dp/2)-(screenWidth.value*0.1).dp))
             )
+            Button(
+                modifier = Modifier.offset((((screenWidth.value * 0.8).dp/4)-(screenWidth.value*0.1).dp)),
+                onClick = {
+                    wordfinder_display.intValue = 0
+                }
+            ) {
+                Text(text = "Close", textAlign = TextAlign.Center)
+            }
+            Button(
+                modifier = Modifier.offset(x = ((((screenWidth.value * 0.8)/4)+((((screenWidth.value * 0.8)/2))))).dp),
+                onClick = {
+                    // Calculate where item is in menus and how to navigate to it. Could use something like bubble sort.
+                }
+            ) {
+                Text(text = "Search", textAlign = TextAlign.Center)
+            }
         }
     }
 }
@@ -771,7 +789,7 @@ fun Buttonboxes() {
                 .background(color = Color.White)
                 .border(border = BorderStroke(2.dp, Color.Black))
                 .clickable(onClick = {
-                    wordfinder_display.value = 1
+                    wordfinder_display.intValue = 1
                     })
         ) {
             Text(text = "Search", color = Color.Black, modifier = Modifier.align(Alignment.Center))
@@ -783,17 +801,18 @@ fun Buttonboxes() {
 
 @Composable
 fun Screen() {
-    tts = rememberTextToSpeech()
-    val a = remember {mutableIntStateOf(0)}
-    GetScreenDimensions()
-    Static_Row_Needs()
-    if (wordfinder_display.intValue != a.intValue) {
-        WordFinder()
-    }
-    else {
-        Buttonboxes()
-        MenuRow(Modifier)
-        InputBox(Modifier)
-        Menu(Modifier)
+    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        tts = rememberTextToSpeech()
+        val a = remember { mutableIntStateOf(0) }
+        GetScreenDimensions()
+        Static_Row_Needs()
+        if (wordfinder_display.intValue != a.intValue) {
+            WordFinder()
+        } else {
+            Buttonboxes()
+            MenuRow(Modifier)
+            InputBox(Modifier)
+            Menu(Modifier)
+        }
     }
 }
