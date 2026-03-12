@@ -59,7 +59,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.TextField
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.times
@@ -80,6 +84,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import java.security.KeyStore
+import kotlin.math.min
 
 
 // Text box text variable
@@ -170,12 +175,15 @@ var linked_menu = mutableStateOf(0)
 
 var modifier_picker: Modifier = Modifier
 
+var menukeylist = mutableListOf<Int>()
+
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            MenuKeyGen()
             Screen()
             if (switchmenuparser.value > 0) {
                 Column(modifier = modifier_picker) {
@@ -386,9 +394,7 @@ fun InputBox_Symbol(index: Int) {
     var name by remember {mutableStateOf("")}
     var url by remember {mutableStateOf("")}
     LaunchedEffect(selected_symbols) {
-        println(selected_symbols[index])
         val res = useApiWithToken(accesstoken, selected_symbols[index])
-        println(res)
         name = res?.name ?: ""
         url = res?.image_url ?: ""
     }
@@ -400,8 +406,6 @@ fun InputBox_Symbol(index: Int) {
     }
     var height_dp = 16
     var width_dp = height_dp * 3.0625
-    println(name)
-    println(url)
     Box {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -540,6 +544,14 @@ fun MenuFinder(menu_id: Int?): menutemplate {
 }
 
 @Composable
+fun MenuKeyGen() {
+    menukeylist.clear()
+    for (i in 0 until MenuList.size) {
+        menukeylist += MenuList[i].id
+    }
+}
+
+@Composable
 @NonSkippableComposable
 fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
     var totalitems = ((screenWidth - (button_boxes_width * 2))/(box_size + (box_padding*2)))*((screenHeight-(static_row_height*2))/box_size)
@@ -573,34 +585,79 @@ fun MenuParser(menutemplate: menutemplate, modifier: Modifier = Modifier) {
             symbol_urls.add(res?.image_url ?: "")
         }
     }
-    key(switchmenuparser.value) {
-        FlowRow(
-            modifier = modifier.fillMaxWidth().fillMaxHeight(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            var itemsdisplayed = 0
-            for (i in 0 until folder_names.size) {
-                Folder(folder_names[i], folder_urls[i], menutemplate.pointers[i], vertical_stretch)
-                itemsdisplayed += 1
+    if (switchmenuparser.value > 0) {
+        key(switchmenuparser.value) {
+            FlowRow(
+                modifier = modifier.fillMaxWidth().fillMaxHeight(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                var itemsdisplayed = 0
+                for (i in 0 until folder_names.size) {
+                    Folder(
+                        folder_names[i],
+                        folder_urls[i],
+                        menutemplate.pointers[i],
+                        vertical_stretch
+                    )
+                    itemsdisplayed += 1
+                }
+                for (i in 0 until symbol_names.size) {
+                    Symbol(symbol_names[i], symbol_urls[i], vertical_stretch, menutemplate.tts[i])
+                    itemsdisplayed += 1
+                }
+                for (i in 0 until totalitems.toInt() - (itemsdisplayed)) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color.White)
+                            .border(
+                                width = 4.dp,
+                                color = Color.Black,
+                                shape = RoundedCornerShape(40.dp)
+                            )
+                            .padding(box_padding)
+                            .scale(1f)
+                            .height(box_size + vertical_stretch + box_padding)
+                            .width(box_size)
+                    )
+                }
             }
-            for (i in 0 until symbol_names.size) {
-                Symbol(symbol_names[i], symbol_urls[i], vertical_stretch, menutemplate.tts[i])
-                itemsdisplayed += 1
-            }
-            for (i in 0 until totalitems.toInt() - (itemsdisplayed)) {
-                Box(
-                    modifier = Modifier
-                        .background(Color.White)
-                        .border(
-                            width = 4.dp,
-                            color = Color.Black,
-                            shape = RoundedCornerShape(40.dp)
-                        )
-                        .padding(box_padding)
-                        .scale(1f)
-                        .height(box_size + vertical_stretch + box_padding)
-                        .width(box_size)
-                )
+        }
+    }
+    else {
+        key(menukeylist[MenuList.indexOf(menutemplate)]) {
+            FlowRow(
+                modifier = modifier.fillMaxWidth().fillMaxHeight(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                var itemsdisplayed = 0
+                for (i in 0 until folder_names.size) {
+                    Folder(
+                        folder_names[i],
+                        folder_urls[i],
+                        menutemplate.pointers[i],
+                        vertical_stretch
+                    )
+                    itemsdisplayed += 1
+                }
+                for (i in 0 until symbol_names.size) {
+                    Symbol(symbol_names[i], symbol_urls[i], vertical_stretch, menutemplate.tts[i])
+                    itemsdisplayed += 1
+                }
+                for (i in 0 until totalitems.toInt() - (itemsdisplayed)) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color.White)
+                            .border(
+                                width = 4.dp,
+                                color = Color.Black,
+                                shape = RoundedCornerShape(40.dp)
+                            )
+                            .padding(box_padding)
+                            .scale(1f)
+                            .height(box_size + vertical_stretch + box_padding)
+                            .width(box_size)
+                    )
+                }
             }
         }
     }
@@ -680,61 +737,132 @@ fun ImageOverride() {
 
 @Composable
 fun WordFinder() {
-    switchmenuparser.value = 0
-    val a = remember {mutableIntStateOf(1)}
-    var search_row_display = remember {mutableIntStateOf(0)}
+    var showRow by remember { mutableStateOf(false) }
+    var text by remember { mutableStateOf("") }
+    val selectedItems = remember { mutableStateListOf<String>() }
+    val box_height = ((screenHeight.value - static_row_height.value) * (0.8)).dp
+    val box_width = (screenWidth.value * 0.8).dp
+    val row_height = 56.dp
+    val flowrow_height_space = box_height-row_height
+    val flowrow_width_space = box_width
     Box(modifier = Modifier.fillMaxSize().background(Color(red = 230, green = 227, blue = 227, alpha = 100))) {
         Box(
             modifier = Modifier
-                .offset(x = (screenWidth.value*0.1).dp, y = ((screenHeight.value - static_row_height.value)*0.1).dp)
+                .offset(x = (screenWidth.value * 0.1).dp, y = ((screenHeight.value - static_row_height.value) * 0.1).dp)
                 .border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
                 .clip(RoundedCornerShape(40.dp))
-                .height(((screenHeight.value - static_row_height.value) * (0.8)).dp)
-                .width((screenWidth.value * 0.8).dp).background(Color.White)
-                .padding(vertical = 20.dp)
+                .height(box_height)
+                .width(box_width)
+                .background(Color.White)
+                .padding(horizontal = 15.dp, vertical = 20.dp)
         ) {
             var text by remember { mutableStateOf("") }
-            Button(
-                modifier = Modifier.offset((((screenWidth.value * 0.8).dp/4)-(screenWidth.value*0.1).dp)).padding(horizontal = 5.dp), // Could add padding variable to the 5.dp
-                onClick = {
-                    wordfinder_display.intValue = 0
-                }
-            ) {
-                Text(text = "Close", textAlign = TextAlign.Center)
-            }
-            Button(
-                modifier = Modifier.offset(x = ((((screenWidth.value * 0.8)/4)+((((screenWidth.value * 0.8)/2))))).dp).padding(horizontal = 5.dp), // Could add padding variable to the 5.dp
-                onClick = {
-                    var found = false
-                    // Calculate where item is in menus and how to navigate to it. Could use something like bubble sort.
-                    for (i in 0 until MenuList.size) {
-                        if (text in MenuList[i].folders) {
-                            found = true
-                        }
-                        if (text in MenuList[i].symbols) {
-                            found = true
 
+            Row(
+                modifier = Modifier.fillMaxWidth().height(row_height),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { wordfinder_display.intValue = 0 }
+                ) {
+                    Text(text = "Close", textAlign = TextAlign.Center)
+                }
+
+                TextField(
+                    value = text,
+                    onValueChange = { newText -> text = newText },
+                    label = { Text("Image Search") },
+                    textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 10.dp)
+                )
+
+                Button(
+                    onClick = {
+                        showRow = true
+                    }
+                ) {
+                    Text(text = "Search", textAlign = TextAlign.Center)
+                }
+            }
+            if (showRow) {
+                Column {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp).offset(y = row_height),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Dropdown Menu for Suggestions
+                        var modified_text = ""
+                        for (i in 0 until MenuList.size) {
+                            for (a in 0 until MenuList[i].folders.size) {
+                                if (MenuList[i].folders[a] == text) {
+                                    WordFinder_Card(text, i, false, a, flowrow_height_space, box_width)
+                                }
+                                if (modified_text.replace(" ", "") == "") {
+                                    Card(modifier = Modifier.fillMaxWidth()) {
+                                        Text(text, modifier = Modifier)
+                                    }
+                                    modified_text = text
+                                }
+                            }
+                            for (b in 0 until MenuList[i].symbols.size) {
+                                if (MenuList[i].symbols[b] == text) {
+                                    WordFinder_Card(text, i, true, b, flowrow_height_space, box_width)
+                                }
+                            }
                         }
                     }
-                    if (!found) {
-                        // Display not found
-                    }
                 }
-            ) {
-                Text(text = "Search", textAlign = TextAlign.Center)
             }
-            TextField(
-                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
-                value = text,
-                onValueChange = { newText ->
-                    text = newText
-                },
-                label = { Text("Image Search") },
-                modifier = Modifier.offset((((screenWidth.value * 0.8).dp/2)-(screenWidth.value*0.2).dp)).width(((((screenWidth.value * 0.8)/4)+((((screenWidth.value * 0.8)/2))))).dp-(((screenWidth.value * 0.8).dp/3))) // Could add padding variable to the 5.dp
-            )
         }
     }
 }
+
+@Composable
+fun WordFinder_Card(Name: String, MenuList_element: Int, is_symbol: Boolean, item_position: Int, total_avaliable_height: Dp, total_avaiable_width: Dp) {
+    var min_height = 20.dp
+    var cards_per_row = 4
+    var card_height = 0.dp
+    var card_name by remember { mutableStateOf("") }
+    var card_url by remember { mutableStateOf("") }
+    var box_size = (total_avaliable_height/cards_per_row)
+    var box_padding = 20.dp
+
+    if ((total_avaliable_height.value/cards_per_row).dp > min_height) {
+        card_height = (total_avaliable_height.value/cards_per_row).dp
+    }
+    else {
+        card_height = min_height
+    }
+    LaunchedEffect(Unit) {
+        if (is_symbol) {
+            val res = useApiWithToken(accesstoken, MenuList[MenuList_element].symbols[item_position])
+            card_name = res?.name.toString()
+            card_url = res?.image_url.toString()
+        } else {
+            val res = useApiWithToken(accesstoken, MenuList[MenuList_element].folders[item_position])
+            card_name = res?.name.toString()
+            card_url = res?.image_url.toString()
+        }
+    }
+    Card(modifier = Modifier.fillMaxWidth().border(width = 4.dp, color = Color.Black, shape = RoundedCornerShape(40.dp))
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(card_url)
+                .build(),
+            "Picture of $card_name",
+            modifier = Modifier
+                .size(box_size)
+                .background(Color.White)
+                .padding(box_padding)
+                .scale(1f)
+        )
+    }
+}
+
 
 @Composable
 fun Buttonboxes() {
